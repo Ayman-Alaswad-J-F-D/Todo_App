@@ -3,7 +3,6 @@
 import 'package:conditional_builder/conditional_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:todo_app/shared/cubit/cubit.dart';
 
 import '../../shared/components/components.dart';
@@ -66,93 +65,12 @@ class HomeLayout extends StatelessWidget {
               } else {
                 scaffoldKey.currentState
                     ?.showBottomSheet(
-                      (context) => Container(
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(30),
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Form(
-                            key: formKey,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                myTextFormField(
-                                  textEditingController: titleConttroller,
-                                  typeInput: TextInputType.text,
-                                  label: 'Task Title',
-                                  validate: (value) {
-                                    if (value!.isEmpty) {
-                                      return 'title must not be empty';
-                                    }
-                                    return null;
-                                  },
-                                  prefixIcon: const Icon(Icons.title),
-                                ),
-                                const SizedBox(height: 15),
-                                myTextFormField(
-                                  textEditingController: timeConttroller,
-                                  typeInput: TextInputType.datetime,
-                                  label: 'Task Time',
-                                  onTap: () {
-                                    showTimePicker(
-                                      context: context,
-                                      initialTime: TimeOfDay.now(),
-                                    )
-                                        .then(
-                                      (value) => timeConttroller.text =
-                                          value!.format(context).toString(),
-                                    )
-                                        .catchError((error) {
-                                      timeConttroller.text = '';
-                                    });
-                                  },
-                                  validate: (value) {
-                                    if (value!.isEmpty) {
-                                      return 'time must not be empty';
-                                    }
-                                    return null;
-                                  },
-                                  prefixIcon:
-                                      const Icon(Icons.watch_later_outlined),
-                                ),
-                                const SizedBox(height: 15),
-                                myTextFormField(
-                                  textEditingController: dateConttroller,
-                                  typeInput: TextInputType.datetime,
-                                  label: 'Task Date',
-                                  onTap: () {
-                                    showDatePicker(
-                                      useRootNavigator: false,
-                                      context: context,
-                                      initialDate: DateTime.now(),
-                                      firstDate: DateTime.now(),
-                                      lastDate: DateTime.parse('2022-12-01'),
-                                    )
-                                        .then(
-                                      (value) => dateConttroller.text =
-                                          DateFormat.yMMMd().format(value!),
-                                    )
-                                        .catchError((error) {
-                                      dateConttroller.text = '';
-                                    });
-                                  },
-                                  validate: (value) {
-                                    if (value!.isEmpty) {
-                                      return 'date must not be empty';
-                                    }
-                                    return null;
-                                  },
-                                  prefixIcon:
-                                      const Icon(Icons.calendar_today_outlined),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                      (context) => addTask(
+                        context,
+                        formKey,
+                        titleConttroller,
+                        timeConttroller,
+                        dateConttroller,
                       ),
                       elevation: 0,
                       backgroundColor: Colors.white,
@@ -168,26 +86,30 @@ class HomeLayout extends StatelessWidget {
             child: Icon(cubit.fabIcon),
           ),
           bottomNavigationBar: BottomNavigationBar(
-              backgroundColor: Colors.grey.shade100,
-              elevation: 0.0,
-              selectedLabelStyle: const TextStyle(fontFamily: 'Lora'),
-              unselectedLabelStyle: const TextStyle(fontFamily: 'Lora'),
-              type: BottomNavigationBarType.fixed,
-              currentIndex: cubit.currentIndex,
-              onTap: (index) {
-                cubit.chagedIndex(index);
-              },
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.menu),
-                  label: 'Tasks',
-                ),
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.check_circle_outline_rounded),
-                    label: 'Done'),
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.archive_rounded), label: 'Archive'),
-              ]),
+            backgroundColor: Colors.grey.shade100,
+            elevation: 0.0,
+            selectedLabelStyle: const TextStyle(fontFamily: 'Lora'),
+            unselectedLabelStyle: const TextStyle(fontFamily: 'Lora'),
+            type: BottomNavigationBarType.fixed,
+            currentIndex: cubit.currentIndex,
+            onTap: (index) {
+              cubit.chagedIndex(index);
+            },
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.menu),
+                label: 'Tasks',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.check_circle_outline_rounded),
+                label: 'Done',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.archive_rounded),
+                label: 'Archive',
+              ),
+            ],
+          ),
         );
       },
     );

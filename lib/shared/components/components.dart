@@ -3,6 +3,7 @@
 import 'package:conditional_builder/conditional_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
 import 'package:todo_app/shared/cubit/cubit.dart';
 
 Widget buildTaskItem(Map model, context, {bool? isDone, bool? isArchive}) =>
@@ -72,7 +73,8 @@ Widget buildTaskItem(Map model, context, {bool? isDone, bool? isArchive}) =>
         TodoAppCubit.get(context).deleteData(id: model['id']);
       },
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsetsDirectional.only(
+            start: 20, bottom: 20, top: 20, end: 10),
         child: Row(
           children: [
             CircleAvatar(
@@ -105,107 +107,127 @@ Widget buildTaskItem(Map model, context, {bool? isDone, bool? isArchive}) =>
                 ],
               ),
             ),
-            const SizedBox(width: 20.0),
+            const SizedBox(width: 6),
+            const SizedBox(
+              height: 20,
+              width: 5,
+              child: VerticalDivider(color: Colors.grey, thickness: 0.2),
+            ),
             isArchive!
                 ? IconButton(
+                    splashColor: Colors.deepOrange.shade200,
                     onPressed: () {
                       TodoAppCubit.get(context)
                           .updateData(status: 'done', id: model['id']);
                     },
                     icon: Icon(Icons.check_box_rounded,
-                        color: Colors.deepOrange.shade300))
+                        color: Colors.deepOrange.shade300),
+                  )
                 : const SizedBox(),
             isDone!
                 ? IconButton(
+                    splashColor: Colors.grey.shade200,
                     onPressed: () {
                       TodoAppCubit.get(context)
                           .updateData(status: 'archive', id: model['id']);
                     },
                     icon: const Icon(Icons.archive_rounded,
-                        color: Colors.black38))
+                        color: Colors.black38),
+                  )
                 : const SizedBox(),
           ],
         ),
       ),
     );
 
-// Widget addTask(context) => Container(
-//       clipBehavior: Clip.antiAliasWithSaveLayer,
-//       decoration: BoxDecoration(
-//         color: Colors.grey.shade100,
-//         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-//       ),
-//       child: Padding(
-//         padding: const EdgeInsets.all(20.0),
-//         child: Form(
-//           key: formKey,
-//           child: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               myTextFormField(
-//                 textEditingController: titleConttroller,
-//                 typeInput: TextInputType.text,
-//                 label: 'Task Title',
-//                 validate: (value) {
-//                   if (value!.isEmpty) {
-//                     return 'title must not be empty';
-//                   }
-//                   return null;
-//                 },
-//                 prefixIcon: const Icon(Icons.title),
-//               ),
-//               const SizedBox(height: 15),
-//               myTextFormField(
-//                 textEditingController: timeConttroller,
-//                 typeInput: TextInputType.datetime,
-//                 label: 'Task Time',
-//                 onTap: () {
-//                   showTimePicker(
-//                     context: context,
-//                     initialTime: TimeOfDay.now(),
-//                   ).then(
-//                     (value) => timeConttroller.text =
-//                         value!.format(context).toString(),
-//                   );
-//                 },
-//                 validate: (value) {
-//                   if (value!.isEmpty) {
-//                     return 'time must not be empty';
-//                   }
-//                   return null;
-//                 },
-//                 prefixIcon: const Icon(Icons.watch_later_outlined),
-//               ),
-//               const SizedBox(height: 15),
-//               myTextFormField(
-//                 textEditingController: dateConttroller,
-//                 typeInput: TextInputType.datetime,
-//                 label: 'Task Date',
-//                 onTap: () {
-//                   showDatePicker(
-//                     useRootNavigator: false,
-//                     context: context,
-//                     initialDate: DateTime.now(),
-//                     firstDate: DateTime.now(),
-//                     lastDate: DateTime.parse('2022-12-01'),
-//                   ).then(
-//                     (value) => dateConttroller.text =
-//                         DateFormat.yMMMd().format(value!),
-//                   );
-//                 },
-//                 validate: (value) {
-//                   if (value!.isEmpty) {
-//                     return 'date must not be empty';
-//                   }
-//                   return null;
-//                 },
-//                 prefixIcon: const Icon(Icons.calendar_today_outlined),
-//               ),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
+Widget addTask(
+        context, formKey, titleConttroller, timeConttroller, dateConttroller) =>
+    Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(30),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              myTextFormField(
+                textEditingController: titleConttroller,
+                typeInput: TextInputType.text,
+                label: 'Task Title',
+                validate: (value) {
+                  if (value!.isEmpty) {
+                    return 'title must not be empty';
+                  }
+                  return null;
+                },
+                prefixIcon: const Icon(Icons.title),
+              ),
+              const SizedBox(height: 15),
+              myTextFormField(
+                textEditingController: timeConttroller,
+                typeInput: TextInputType.datetime,
+                label: 'Task Time',
+                onTap: () {
+                  showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.now(),
+                  )
+                      .then(
+                    (value) => timeConttroller.text =
+                        value!.format(context).toString(),
+                  )
+                      .catchError((error) {
+                    timeConttroller.text = '';
+                  });
+                },
+                validate: (value) {
+                  if (value!.isEmpty) {
+                    return 'time must not be empty';
+                  }
+                  return null;
+                },
+                prefixIcon: const Icon(Icons.watch_later_outlined),
+              ),
+              const SizedBox(height: 15),
+              myTextFormField(
+                textEditingController: dateConttroller,
+                typeInput: TextInputType.datetime,
+                label: 'Task Date',
+                onTap: () {
+                  showDatePicker(
+                    useRootNavigator: false,
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.parse('2022-12-01'),
+                  )
+                      .then(
+                    (value) => dateConttroller.text =
+                        DateFormat.yMMMd().format(value!),
+                  )
+                      .catchError((error) {
+                    dateConttroller.text = '';
+                  });
+                },
+                validate: (value) {
+                  if (value!.isEmpty) {
+                    return 'date must not be empty';
+                  }
+                  return null;
+                },
+                prefixIcon: const Icon(Icons.calendar_today_outlined),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
 
 Widget tasksBulider({
   required List<Map> tasks,
