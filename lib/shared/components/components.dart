@@ -1,0 +1,334 @@
+// ignore_for_file: deprecated_member_use, import_of_legacy_library_into_null_safe
+
+import 'package:conditional_builder/conditional_builder.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:todo_app/shared/cubit/cubit.dart';
+
+Widget buildTaskItem(Map model, context, {bool? isDone, bool? isArchive}) =>
+    Dismissible(
+      background: Container(
+        color: Colors.red,
+        child: Padding(
+          padding: const EdgeInsets.all(15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: const [
+              Icon(Icons.delete, color: Colors.white),
+              Text('Move to trash', style: TextStyle(color: Colors.white)),
+            ],
+          ),
+        ),
+      ),
+      secondaryBackground: Container(
+        color: Colors.red,
+        child: Padding(
+          padding: const EdgeInsets.all(15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: const [
+              Icon(Icons.delete, color: Colors.white),
+              Text('Move to trash', style: TextStyle(color: Colors.white)),
+            ],
+          ),
+        ),
+      ),
+      confirmDismiss: (DismissDirection direction) async {
+        return await showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text(
+                "Delete Confirmation",
+                style: TextStyle(fontFamily: 'Lora', color: Colors.red),
+              ),
+              content: Text(
+                "Are you sure you want to delete this task ?",
+                style:
+                    TextStyle(fontFamily: 'Lora', color: Colors.grey.shade600),
+              ),
+              actions: [
+                FlatButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(fontFamily: 'Lora'),
+                  ),
+                ),
+                FlatButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text(
+                    "Delete",
+                    style: TextStyle(fontFamily: 'Lora', color: Colors.red),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      key: Key(model['id'].toString()),
+      onDismissed: (direction) {
+        TodoAppCubit.get(context).deleteData(id: model['id']);
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 37.0,
+              child: Text(
+                '${model['time']}',
+                style: const TextStyle(fontFamily: 'Lora'),
+              ),
+            ),
+            const SizedBox(width: 18.0),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${model['title']}',
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Lora',
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    '${model['date']}',
+                    style:
+                        const TextStyle(color: Colors.grey, fontFamily: 'Lora'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 20.0),
+            isArchive!
+                ? IconButton(
+                    onPressed: () {
+                      TodoAppCubit.get(context)
+                          .updateData(status: 'done', id: model['id']);
+                    },
+                    icon: Icon(Icons.check_box_rounded,
+                        color: Colors.deepOrange.shade300))
+                : const SizedBox(),
+            isDone!
+                ? IconButton(
+                    onPressed: () {
+                      TodoAppCubit.get(context)
+                          .updateData(status: 'archive', id: model['id']);
+                    },
+                    icon: const Icon(Icons.archive_rounded,
+                        color: Colors.black38))
+                : const SizedBox(),
+          ],
+        ),
+      ),
+    );
+
+// Widget addTask(context) => Container(
+//       clipBehavior: Clip.antiAliasWithSaveLayer,
+//       decoration: BoxDecoration(
+//         color: Colors.grey.shade100,
+//         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+//       ),
+//       child: Padding(
+//         padding: const EdgeInsets.all(20.0),
+//         child: Form(
+//           key: formKey,
+//           child: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               myTextFormField(
+//                 textEditingController: titleConttroller,
+//                 typeInput: TextInputType.text,
+//                 label: 'Task Title',
+//                 validate: (value) {
+//                   if (value!.isEmpty) {
+//                     return 'title must not be empty';
+//                   }
+//                   return null;
+//                 },
+//                 prefixIcon: const Icon(Icons.title),
+//               ),
+//               const SizedBox(height: 15),
+//               myTextFormField(
+//                 textEditingController: timeConttroller,
+//                 typeInput: TextInputType.datetime,
+//                 label: 'Task Time',
+//                 onTap: () {
+//                   showTimePicker(
+//                     context: context,
+//                     initialTime: TimeOfDay.now(),
+//                   ).then(
+//                     (value) => timeConttroller.text =
+//                         value!.format(context).toString(),
+//                   );
+//                 },
+//                 validate: (value) {
+//                   if (value!.isEmpty) {
+//                     return 'time must not be empty';
+//                   }
+//                   return null;
+//                 },
+//                 prefixIcon: const Icon(Icons.watch_later_outlined),
+//               ),
+//               const SizedBox(height: 15),
+//               myTextFormField(
+//                 textEditingController: dateConttroller,
+//                 typeInput: TextInputType.datetime,
+//                 label: 'Task Date',
+//                 onTap: () {
+//                   showDatePicker(
+//                     useRootNavigator: false,
+//                     context: context,
+//                     initialDate: DateTime.now(),
+//                     firstDate: DateTime.now(),
+//                     lastDate: DateTime.parse('2022-12-01'),
+//                   ).then(
+//                     (value) => dateConttroller.text =
+//                         DateFormat.yMMMd().format(value!),
+//                   );
+//                 },
+//                 validate: (value) {
+//                   if (value!.isEmpty) {
+//                     return 'date must not be empty';
+//                   }
+//                   return null;
+//                 },
+//                 prefixIcon: const Icon(Icons.calendar_today_outlined),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+
+Widget tasksBulider({
+  required List<Map> tasks,
+  bool isDone = true,
+  bool isArchive = true,
+}) =>
+    ConditionalBuilder(
+      condition: tasks.isNotEmpty,
+      builder: (context) {
+        return ListView.separated(
+          itemBuilder: (context, index) => buildTaskItem(
+            tasks[index],
+            context,
+            isDone: isDone,
+            isArchive: isArchive,
+          ),
+          separatorBuilder: (context, index) =>
+              const Divider(indent: 20, height: 10),
+          itemCount: tasks.length,
+        );
+      },
+      fallback: (context) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.menu_open_rounded, size: 80, color: Colors.black45),
+              SizedBox(height: 20),
+              Text(
+                'No Tasks Yet, Please Add Some Tasks',
+                style: TextStyle(color: Colors.grey, fontFamily: 'Lora'),
+              )
+            ],
+          ),
+        );
+      },
+    );
+
+Widget myTextFormField({
+  required TextEditingController textEditingController,
+  required TextInputType typeInput,
+  required String label,
+  double radius = 15.0,
+  double gapPadding = 5.0,
+  Icon? prefixIcon,
+  IconData? suffixIcon,
+  Function()? suffixPressed,
+  Function()? onSubmit,
+  Function(String)? onChange,
+  Function()? onTap,
+  String? Function(String?)? validate,
+  bool isPassword = false,
+  bool filledneed = false,
+  Color fillColor = Colors.white,
+  String? hintText,
+  Color? colorHintText,
+  double? fintSizeHintText,
+  bool isClickable = true,
+}) =>
+    TextFormField(
+      enabled: isClickable,
+      onChanged: onChange,
+      onTap: onTap,
+      validator: validate,
+      controller: textEditingController,
+      keyboardType: typeInput,
+      obscureText: isPassword,
+      // style: const TextStyle(color: Colors.indigo),
+      decoration: InputDecoration(
+        filled: filledneed,
+        fillColor: filledneed ? fillColor : Colors.white,
+        labelText: label,
+        labelStyle: const TextStyle(
+          fontFamily: 'Lora',
+        ),
+        hintText: hintText,
+        hintStyle: TextStyle(
+          color: colorHintText,
+          fontSize: fintSizeHintText,
+        ),
+        border: OutlineInputBorder(
+          gapPadding: gapPadding,
+          borderRadius: BorderRadius.all(Radius.circular(radius)),
+        ),
+        prefixIcon: prefixIcon,
+        suffixIcon: suffixIcon != null
+            ? IconButton(
+                onPressed: suffixPressed,
+                icon: Icon(suffixIcon),
+              )
+            : null,
+      ),
+    );
+
+void showToastShort({
+  required String text,
+  required ToastStates state,
+}) =>
+    Fluttertoast.showToast(
+      msg: text,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.CENTER,
+      timeInSecForIosWeb: 5,
+      backgroundColor: chooseToastColor(state),
+      textColor: Colors.white,
+      fontSize: 15.0,
+    );
+
+// ignore: constant_identifier_names
+enum ToastStates { SUCCESS, ERROR, WARNING }
+
+Color chooseToastColor(ToastStates state) {
+  Color color;
+  switch (state) {
+    case ToastStates.SUCCESS:
+      color = Colors.green;
+      break;
+    case ToastStates.ERROR:
+      color = Colors.red;
+      break;
+    case ToastStates.WARNING:
+      color = Colors.deepOrange.shade300;
+      break;
+  }
+  return color;
+}
