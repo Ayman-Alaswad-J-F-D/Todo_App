@@ -6,14 +6,8 @@ import 'package:todo_app/shared/bloc_observer.dart';
 import 'shared/cubit/cubit.dart';
 
 void main() {
-  // ignore: deprecated_member_use
-  BlocOverrides.runZoned(
-    () {
-      // Use cubits...
-      runApp(const MyApp());
-    },
-    blocObserver: MyBlocObserver(),
-  );
+  Bloc.observer = MyBlocObserver();
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
