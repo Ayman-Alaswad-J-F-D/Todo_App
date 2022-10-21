@@ -41,26 +41,22 @@ Widget buildTaskItem(Map model, context, {bool? isDone, bool? isArchive}) =>
             return AlertDialog(
               title: const Text(
                 "Delete Confirmation",
-                style: TextStyle(fontFamily: 'Lora', color: Colors.red),
+                style: TextStyle(color: Colors.red),
               ),
               content: Text(
                 "Are you sure you want to delete this task ?",
-                style:
-                    TextStyle(fontFamily: 'Lora', color: Colors.grey.shade600),
+                style: TextStyle(color: Colors.grey.shade600),
               ),
               actions: [
                 FlatButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text(
-                    "Cancel",
-                    style: TextStyle(fontFamily: 'Lora'),
-                  ),
+                  child: const Text("Cancel"),
                 ),
                 FlatButton(
                   onPressed: () => Navigator.of(context).pop(true),
                   child: const Text(
                     "Delete",
-                    style: TextStyle(fontFamily: 'Lora', color: Colors.red),
+                    style: TextStyle(color: Colors.red),
                   ),
                 ),
               ],
@@ -79,10 +75,7 @@ Widget buildTaskItem(Map model, context, {bool? isDone, bool? isArchive}) =>
           children: [
             CircleAvatar(
               radius: 37.0,
-              child: Text(
-                '${model['time']}',
-                style: const TextStyle(fontFamily: 'Lora'),
-              ),
+              child: Text('${model['time']}'),
             ),
             const SizedBox(width: 18.0),
             Expanded(
@@ -95,14 +88,12 @@ Widget buildTaskItem(Map model, context, {bool? isDone, bool? isArchive}) =>
                     style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'Lora',
                     ),
                   ),
                   const SizedBox(height: 5),
                   Text(
                     '${model['date']}',
-                    style:
-                        const TextStyle(color: Colors.grey, fontFamily: 'Lora'),
+                    style: const TextStyle(color: Colors.grey),
                   ),
                 ],
               ),
@@ -258,7 +249,7 @@ Widget tasksBulider({
               SizedBox(height: 20),
               Text(
                 'No Tasks Yet, Please Add Some Tasks',
-                style: TextStyle(color: Colors.grey, fontFamily: 'Lora'),
+                style: TextStyle(color: Colors.grey),
               )
             ],
           ),

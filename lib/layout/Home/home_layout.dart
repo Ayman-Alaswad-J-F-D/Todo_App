@@ -38,10 +38,7 @@ class HomeLayout extends StatelessWidget {
           backgroundColor: Colors.white,
           key: scaffoldKey,
           appBar: AppBar(
-            title: Text(
-              cubit.title[cubit.currentIndex],
-              style: const TextStyle(fontFamily: 'Lora'),
-            ),
+            title: Text(cubit.title[cubit.currentIndex]),
           ),
           body: ConditionalBuilder(
             condition: state is! GetDatabaseLoadingState,
@@ -88,8 +85,6 @@ class HomeLayout extends StatelessWidget {
           bottomNavigationBar: BottomNavigationBar(
             backgroundColor: Colors.grey.shade100,
             elevation: 0.0,
-            selectedLabelStyle: const TextStyle(fontFamily: 'Lora'),
-            unselectedLabelStyle: const TextStyle(fontFamily: 'Lora'),
             type: BottomNavigationBarType.fixed,
             currentIndex: cubit.currentIndex,
             onTap: (index) {
