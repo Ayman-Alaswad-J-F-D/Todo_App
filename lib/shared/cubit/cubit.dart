@@ -1,4 +1,4 @@
-// ignore_for_file: import_of_legacy_library_into_null_safe, avoid_print
+// ignore_for_file: import_of_legacy_library_into_null_safe, avoid_print, equal_keys_in_map
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -57,7 +57,7 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
       print('database Created');
       await database
           .execute(
-            'CREATE TABLE tasks (id INTEGER PRIMARY KEY, title TEXT, date TEXT, time TEXT,status TEXT)',
+            'CREATE TABLE tasks (id INTEGER PRIMARY KEY, title TEXT, date TEXT, time TEXT,status TEXT,image TEXT)',
           )
           .then((value) => print('Table created'))
           .catchError(
@@ -75,7 +75,7 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
     await database?.transaction((txn) {
       txn
           .rawInsert(
-        'INSERT INTO tasks(title, time, date, status) VALUES("$title","$time","$date","new")',
+        'INSERT INTO tasks(title, time, date, status,image) VALUES("$title","$time","$date","new","")',
       )
           .then((value) {
         print('$value Insert Successfully');
@@ -88,9 +88,19 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
     });
   }
 
-  void updateData({required String status, required int id}) async {
+  void updateStatus({required String status, required int id}) async {
     database!.rawUpdate(
         'UPDATE tasks SET status = ? WHERE id = ?', [status, id]).then((value) {
+      getFromDatabase(database);
+      emit(UpdateDatabaseState());
+    });
+  }
+
+  void updateImage({required String image, required int id}) async {
+    database!.rawUpdate(
+        'UPDATE tasks SET image = ? WHERE id = ?', [image, id]).then((value) {
+      print(image);
+      print(value);
       getFromDatabase(database);
       emit(UpdateDatabaseState());
     });

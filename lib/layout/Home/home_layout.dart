@@ -11,12 +11,14 @@ import '../../shared/components/components.dart';
 class HomeLayout extends StatelessWidget {
   HomeLayout({Key? key}) : super(key: key);
 
+  Color? background;
+
   var scaffoldKey = GlobalKey<ScaffoldState>();
   var formKey = GlobalKey<FormState>();
-
-  var titleConttroller = TextEditingController();
-  var timeConttroller = TextEditingController();
-  var dateConttroller = TextEditingController();
+  var pageController = PageController();
+  var titleController = TextEditingController();
+  var timeController = TextEditingController();
+  var dateController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +29,7 @@ class HomeLayout extends StatelessWidget {
         }
         if (state is ChangeBottomSheetOpenState) {
           showToastShort(
-            text: 'When finished, click on the add button',
+            text: 'When Finished, Click on the add button',
             state: ToastStates.WARNING,
           );
         }
@@ -42,7 +44,12 @@ class HomeLayout extends StatelessWidget {
           ),
           body: ConditionalBuilder(
             condition: state is! GetDatabaseLoadingState,
-            builder: (context) => cubit.screen[cubit.currentIndex],
+            builder: (context) => PageView(
+                controller: pageController,
+                children: cubit.screen,
+                onPageChanged: (index) {
+                  cubit.chagedIndex(index);
+                }),
             fallback: (context) =>
                 const Center(child: CircularProgressIndicator()),
           ),
@@ -51,32 +58,34 @@ class HomeLayout extends StatelessWidget {
               if (cubit.isBottomSheetShow) {
                 if (formKey.currentState!.validate()) {
                   cubit.insertDatabase(
-                    title: titleConttroller.text,
-                    time: timeConttroller.text,
-                    date: dateConttroller.text,
+                    title: titleController.text,
+                    time: timeController.text,
+                    date: dateController.text,
                   );
-                  titleConttroller.clear();
-                  timeConttroller.clear();
-                  dateConttroller.clear();
+                  titleController.clear();
+                  timeController.clear();
+                  dateController.clear();
                 }
               } else {
                 scaffoldKey.currentState
                     ?.showBottomSheet(
-                      (context) => addTask(
-                        context,
-                        formKey,
-                        titleConttroller,
-                        timeConttroller,
-                        dateConttroller,
-                      ),
+                      (context) {
+                        return addTask(
+                          context,
+                          formKey,
+                          titleController,
+                          timeController,
+                          dateController,
+                        );
+                      },
                       elevation: 0,
                       backgroundColor: Colors.white,
                     )
                     .closed
                     .then((value) {
-                  cubit.changeBottomSheetStata(isShow: false, icon: Icons.edit);
-                });
-
+                      cubit.changeBottomSheetStata(
+                          isShow: false, icon: Icons.edit);
+                    });
                 cubit.changeBottomSheetStata(isShow: true, icon: Icons.add);
               }
             },
@@ -87,8 +96,8 @@ class HomeLayout extends StatelessWidget {
             elevation: 0.0,
             type: BottomNavigationBarType.fixed,
             currentIndex: cubit.currentIndex,
-            onTap: (index) {
-              cubit.chagedIndex(index);
+            onTap: (page) {
+              pageController.jumpToPage(page);
             },
             items: const [
               BottomNavigationBarItem(

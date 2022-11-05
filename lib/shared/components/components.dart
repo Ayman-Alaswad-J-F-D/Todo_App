@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use, import_of_legacy_library_into_null_safe
+// ignore_for_file: deprecated_member_use, import_of_legacy_library_into_null_safe, avoid_print
 
 import 'package:conditional_builder/conditional_builder.dart';
 import 'package:flutter/material.dart';
@@ -6,133 +6,218 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:todo_app/shared/cubit/cubit.dart';
 
-Widget buildTaskItem(Map model, context, {bool? isDone, bool? isArchive}) =>
-    Dismissible(
-      background: Container(
-        color: Colors.red,
-        child: Padding(
-          padding: const EdgeInsets.all(15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: const [
-              Icon(Icons.delete, color: Colors.white),
-              Text('Move to trash', style: TextStyle(color: Colors.white)),
-            ],
-          ),
-        ),
-      ),
-      secondaryBackground: Container(
-        color: Colors.red,
-        child: Padding(
-          padding: const EdgeInsets.all(15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: const [
-              Icon(Icons.delete, color: Colors.white),
-              Text('Move to trash', style: TextStyle(color: Colors.white)),
-            ],
-          ),
-        ),
-      ),
-      confirmDismiss: (DismissDirection direction) async {
-        return await showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text(
-                "Delete Confirmation",
-                style: TextStyle(color: Colors.red),
-              ),
-              content: Text(
-                "Are you sure you want to delete this task ?",
-                style: TextStyle(color: Colors.grey.shade600),
-              ),
-              actions: [
-                FlatButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text("Cancel"),
-                ),
-                FlatButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text(
-                    "Delete",
-                    style: TextStyle(color: Colors.red),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-      key: Key(model['id'].toString()),
-      onDismissed: (direction) {
-        TodoAppCubit.get(context).deleteData(id: model['id']);
-      },
+Widget buildTaskItem(Map model, context, {bool? isDone, bool? isArchive}) {
+  var cubit = TodoAppCubit.get(context);
+
+  return Dismissible(
+    background: Container(
+      color: Colors.red,
       child: Padding(
-        padding: const EdgeInsetsDirectional.only(
-            start: 20, bottom: 20, top: 20, end: 10),
+        padding: const EdgeInsets.all(15),
         child: Row(
-          children: [
-            CircleAvatar(
-              radius: 37.0,
-              child: Text('${model['time']}'),
-            ),
-            const SizedBox(width: 18.0),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${model['title']}',
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    '${model['date']}',
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 6),
-            const SizedBox(
-              height: 20,
-              width: 5,
-              child: VerticalDivider(color: Colors.grey, thickness: 0.2),
-            ),
-            isArchive!
-                ? IconButton(
-                    splashColor: Colors.deepOrange.shade200,
-                    onPressed: () {
-                      TodoAppCubit.get(context)
-                          .updateData(status: 'done', id: model['id']);
-                    },
-                    icon: Icon(Icons.check_box_rounded,
-                        color: Colors.deepOrange.shade300),
-                  )
-                : const SizedBox(),
-            isDone!
-                ? IconButton(
-                    splashColor: Colors.grey.shade200,
-                    onPressed: () {
-                      TodoAppCubit.get(context)
-                          .updateData(status: 'archive', id: model['id']);
-                    },
-                    icon: const Icon(Icons.archive_rounded,
-                        color: Colors.black38),
-                  )
-                : const SizedBox(),
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: const [
+            Icon(Icons.delete, color: Colors.white),
+            Text('Move to trash', style: TextStyle(color: Colors.white)),
           ],
         ),
       ),
+    ),
+    secondaryBackground: Container(
+      color: Colors.red,
+      child: Padding(
+        padding: const EdgeInsets.all(15),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: const [
+            Icon(Icons.delete, color: Colors.white),
+            Text('Move to trash', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+      ),
+    ),
+    confirmDismiss: (DismissDirection direction) async {
+      return await showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text(
+              "Delete Confirmation",
+              style: TextStyle(color: Colors.red),
+            ),
+            content: Text(
+              "Are you sure you want to delete this task ?",
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+            actions: [
+              FlatButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text("Cancel"),
+              ),
+              FlatButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text(
+                  "Delete",
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    },
+    key: Key(model['id'].toString()),
+    onDismissed: (direction) {
+      cubit.deleteData(id: model['id']);
+    },
+    child: Padding(
+      padding: const EdgeInsetsDirectional.only(
+          start: 20, bottom: 20, top: 20, end: 10),
+      child: Row(
+        children: [
+          Stack(
+            alignment: Alignment.topRight,
+            children: [
+              CircleAvatar(
+                radius: 37.0,
+                child: model['image'] != '' ? null : Text('${model['time']}'),
+                backgroundImage:
+                    model['image'] != '' ? AssetImage(model['image']) : null,
+              ),
+              CircleAvatar(
+                radius: 10,
+                backgroundColor: Colors.deepOrange.shade300,
+                child: IconButton(
+                  padding: const EdgeInsets.all(0),
+                  icon: const Icon(
+                    Icons.edit_sharp,
+                    size: 11,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text(
+                          "Select Icon :",
+                          style: TextStyle(color: Colors.deepOrange.shade300),
+                        ),
+                        content: SizedBox(
+                          height: 160,
+                          child: GridView.builder(
+                            itemCount: assetsImage.length,
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              crossAxisSpacing: 20,
+                              mainAxisSpacing: 20,
+                            ),
+                            itemBuilder: (context, index) {
+                              return circleImage(
+                                context,
+                                model['id'],
+                                assetsImage[index],
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              )
+            ],
+          ),
+          const SizedBox(width: 18.0),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${model['title']}',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  '${model['date']}',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                Text(
+                  model['image'] != '' ? '${model['time']}' : '',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          const SizedBox(
+            height: 20,
+            width: 5,
+            child: VerticalDivider(color: Colors.grey, thickness: 0.2),
+          ),
+          isArchive!
+              ? IconButton(
+                  splashColor: Colors.deepOrange.shade200,
+                  onPressed: () {
+                    cubit.updateStatus(status: 'done', id: model['id']);
+                  },
+                  icon: Icon(Icons.check_box_rounded,
+                      color: Colors.deepOrange.shade300),
+                )
+              : const SizedBox(),
+          isDone!
+              ? IconButton(
+                  splashColor: Colors.grey.shade200,
+                  onPressed: () {
+                    cubit.updateStatus(status: 'archive', id: model['id']);
+                  },
+                  icon:
+                      const Icon(Icons.archive_rounded, color: Colors.black38),
+                )
+              : const SizedBox(),
+        ],
+      ),
+    ),
+  );
+}
+
+List<String> assetsImage = [
+  'assets/eat_image.png',
+  'assets/play_image.png',
+  'assets/watching_image.png',
+  'assets/sport_image.png',
+  'assets/code_image.png',
+  'assets/driving_image.png',
+  'assets/tool-image.png',
+  'assets/pencil_image.png',
+  'assets/work_image.png',
+  'assets/plane_image.png',
+];
+
+Widget circleImage(context, id, String image) => InkWell(
+      onTap: () {
+        TodoAppCubit.get(context).updateImage(image: image, id: id);
+        Navigator.pop(context);
+      },
+      child: CircleAvatar(
+        backgroundImage: AssetImage(image),
+        minRadius: 25,
+      ),
     );
 
+////////////////////////////////////////
+
 Widget addTask(
-        context, formKey, titleConttroller, timeConttroller, dateConttroller) =>
+  context,
+  formKey,
+  titleConttroller,
+  timeConttroller,
+  dateConttroller,
+) =>
     Container(
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
@@ -214,6 +299,7 @@ Widget addTask(
                 },
                 prefixIcon: const Icon(Icons.calendar_today_outlined),
               ),
+              const SizedBox(height: 5),
             ],
           ),
         ),
@@ -320,11 +406,11 @@ void showToastShort({
     Fluttertoast.showToast(
       msg: text,
       toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.CENTER,
+      gravity: ToastGravity.SNACKBAR,
       timeInSecForIosWeb: 5,
       backgroundColor: chooseToastColor(state),
       textColor: Colors.white,
-      fontSize: 15.0,
+      fontSize: 16.0,
     );
 
 // ignore: constant_identifier_names

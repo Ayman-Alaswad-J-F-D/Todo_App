@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
           fontFamily: 'Lora',
           primarySwatch: Colors.teal,
         ),
-        home: HomeLayout(),
+        home:  HomeLayout(),
       ),
     );
   }
