@@ -1,6 +1,6 @@
 // ignore_for_file: deprecated_member_use, import_of_legacy_library_into_null_safe, avoid_print
 
-import 'package:conditional_builder/conditional_builder.dart';
+import 'package:conditional_builder_null_safety/conditional_builder_null_safety.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';

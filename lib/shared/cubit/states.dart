@@ -21,9 +21,3 @@ class ChangeBottomSheetCloseState extends TodoAppStates {}
 class UpdateDatabaseState extends TodoAppStates {}
 
 class DeleteDatabaseState extends TodoAppStates {}
-
-// class SelectImageTrueState extends TodoAppStates {}
-
-// class SelectImageFlaseState extends TodoAppStates {}
-
-class SelectImageRefereshState extends TodoAppStates {}
