@@ -281,7 +281,7 @@ Widget addTask(
                     context: context,
                     initialDate: DateTime.now(),
                     firstDate: DateTime.now(),
-                    lastDate: DateTime.parse('2022-12-01'),
+                    lastDate: DateTime.parse('2030-12-01'),
                   )
                       .then(
                     (value) => dateConttroller.text =
