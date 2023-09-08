@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:todo_app/Layout/Home/home_layout.dart';
-import 'package:todo_app/shared/bloc_observer.dart';
 
+import 'Layout/Home/home_layout.dart';
+import 'shared/bloc_observer.dart';
 import 'shared/cubit/cubit.dart';
+import 'shared/styles/colors.dart';
+import 'shared/styles/styles.dart';
 
 void main() {
   Bloc.observer = MyBlocObserver();
@@ -20,10 +22,10 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          fontFamily: 'Lora',
-          primarySwatch: Colors.teal,
+          fontFamily: AppFonts.primaryFont,
+          primarySwatch: AppColors.primary,
         ),
-        home:  HomeLayout(),
+        home: HomeLayout(),
       ),
     );
   }
