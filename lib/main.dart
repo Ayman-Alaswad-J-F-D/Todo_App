@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
           fontFamily: AppFonts.primaryFont,
           primarySwatch: AppColors.primary,
         ),
-        home: HomeLayout(),
+        home: const HomeLayout(),
       ),
     );
   }
