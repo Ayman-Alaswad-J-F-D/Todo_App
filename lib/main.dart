@@ -20,6 +20,7 @@ class MyApp extends StatelessWidget {
     return BlocProvider(
       create: (context) => TodoAppCubit()..createDatabase(),
       child: MaterialApp(
+        navigatorKey: GlobalKey<NavigatorState>(),
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           fontFamily: AppFonts.primaryFont,

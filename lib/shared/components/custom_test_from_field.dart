@@ -3,28 +3,53 @@ import 'package:flutter/material.dart';
 import '../styles/colors.dart';
 import '../styles/styles.dart';
 
-Widget myTextFormField({
-  required TextEditingController textEditingController,
-  required TextInputType typeInput,
-  required String label,
-  double radius = 15.0,
-  double gapPadding = 5.0,
-  Icon? prefixIcon,
-  IconData? suffixIcon,
-  Function()? suffixPressed,
-  Function()? onSubmit,
-  Function(String)? onChange,
-  Function()? onTap,
-  String? Function(String?)? validate,
-  bool isPassword = false,
-  bool filledneed = false,
-  Color fillColor = AppColors.white,
-  String? hintText,
-  Color? colorHintText,
-  double? fintSizeHintText,
-  bool isClickable = true,
-}) =>
-    TextFormField(
+class CustomTextFormField extends StatelessWidget {
+  const CustomTextFormField({
+    Key? key,
+    required this.textEditingController,
+    required this.typeInput,
+    required this.label,
+    this.radius = 15.0,
+    this.gapPadding = 5.0,
+    this.prefixIcon,
+    this.suffixIcon,
+    this.suffixPressed,
+    this.onSubmit,
+    this.onChange,
+    this.onTap,
+    this.validate,
+    this.isPassword = false,
+    this.filledneed = false,
+    this.fillColor = AppColors.white,
+    this.hintText,
+    this.colorHintText,
+    this.fintSizeHintText,
+    this.isClickable = true,
+  }) : super(key: key);
+
+  final TextEditingController textEditingController;
+  final TextInputType typeInput;
+  final String label;
+  final double radius;
+  final double gapPadding;
+  final Icon? prefixIcon;
+  final IconData? suffixIcon;
+  final Function()? suffixPressed;
+  final Function()? onSubmit;
+  final Function(String)? onChange;
+  final Function()? onTap;
+  final String? Function(String?)? validate;
+  final bool isPassword;
+  final bool filledneed;
+  final Color fillColor;
+  final String? hintText;
+  final Color? colorHintText;
+  final double? fintSizeHintText;
+  final bool isClickable;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
       enabled: isClickable,
       onChanged: onChange,
       onTap: onTap,
@@ -58,3 +83,5 @@ Widget myTextFormField({
             : null,
       ),
     );
+  }
+}

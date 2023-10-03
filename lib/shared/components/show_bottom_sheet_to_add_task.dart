@@ -20,7 +20,7 @@ void showBottomsheetToAddTask({
           timeController: timeController,
           dateController: dateController,
         ),
-        elevation: 0,
+        elevation: 0.0,
         backgroundColor: AppColors.white,
       )
       .closed

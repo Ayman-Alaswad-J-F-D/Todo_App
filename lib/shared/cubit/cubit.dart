@@ -29,6 +29,21 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
     emit(BottomNavBarState());
   }
 
+  List<BottomNavigationBarItem> bottomNavigationBarItems = const [
+    BottomNavigationBarItem(
+      icon: Icon(Icons.menu),
+      label: 'Tasks',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.check_circle_outline_rounded),
+      label: 'Done',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.archive_rounded),
+      label: 'Archive',
+    ),
+  ];
+
   bool isBottomSheetShow = false;
   IconData fabIcon = Icons.edit;
 
@@ -51,7 +66,6 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
 
   void createDatabase() {
     // open the database
-    // ignore: unused_local_variable
     openDatabase('todo.db', version: 1, onCreate: (database, version) async {
       // When creating the db, create the table
       print('database Created');
@@ -106,7 +120,7 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
     });
   }
 
-  void deleteData({required int id}) async {
+  void deleteTask({required int id}) async {
     database!.rawDelete('DELETE FROM tasks WHERE id = ?', [id]).then((value) {
       getFromDatabase(database);
       emit(DeleteDatabaseState());
@@ -119,7 +133,6 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
     archiveTasks = [];
     emit(GetDatabaseLoadingState());
     database!.rawQuery('SELECT * FROM tasks').then((value) {
-      // ignore: avoid_function_literals_in_foreach_calls
       value.forEach((element) {
         if (element['status'] == 'new') {
           newTasks.add(element);

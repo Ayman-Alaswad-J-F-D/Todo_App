@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../cubit/cubit.dart';
 import '../styles/colors.dart';
-import 'constants.dart';
+import 'image_widget.dart';
+import 'info_task.dart';
 
 class BuildTaskItem extends StatelessWidget {
   const BuildTaskItem({
@@ -24,7 +25,7 @@ class BuildTaskItem extends StatelessWidget {
       key: Key(model['id'].toString()),
       background: backTrash(mainAxisAlignment: MainAxisAlignment.start),
       secondaryBackground: backTrash(mainAxisAlignment: MainAxisAlignment.end),
-      onDismissed: (direction) => cubit.deleteData(id: model['id']),
+      onDismissed: (direction) => cubit.deleteTask(id: model['id']),
       confirmDismiss: (DismissDirection direction) async {
         return await showDialog(
           context: context,
@@ -40,59 +41,9 @@ class BuildTaskItem extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Stack(
-              alignment: Alignment.topRight,
-              children: [
-                CircleAvatar(
-                  radius: 37.0,
-                  child: model['image'] != '' ? null : Text('${model['time']}'),
-                  backgroundImage:
-                      model['image'] != '' ? AssetImage(model['image']) : null,
-                ),
-                CircleAvatar(
-                  radius: 10,
-                  backgroundColor: AppColors.deebOrangeS300,
-                  child: IconButton(
-                    padding: const EdgeInsets.all(0),
-                    icon: const Icon(
-                      Icons.edit_sharp,
-                      color: AppColors.white,
-                      size: 11,
-                    ),
-                    onPressed: () => showDialog(
-                      context: context,
-                      builder: (context) =>
-                          selectImageToTask(context: context, model: model),
-                    ),
-                  ),
-                )
-              ],
-            ),
+            ImageWidget(model: model),
             const SizedBox(width: 18.0),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${model['title']}',
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    '${model['date']}',
-                    style: const TextStyle(color: AppColors.grey),
-                  ),
-                  Text(
-                    model['image'] != '' ? '${model['time']}' : '',
-                    style: const TextStyle(color: AppColors.grey),
-                  ),
-                ],
-              ),
-            ),
+            InfoTask(model: model),
             const SizedBox(width: 6),
             const SizedBox(
               height: 20,
@@ -150,9 +101,12 @@ Widget confirmDialog(BuildContext context) {
       "Delete Confirmation",
       style: TextStyle(color: AppColors.red),
     ),
-    content: Text(
-      "Are you sure you want to delete this task ?",
-      style: TextStyle(color: AppColors.greyS600),
+    content: SizedBox(
+      width: MediaQuery.of(context).size.width / 1.3,
+      child: Text(
+        "Are you sure you want to delete this task ?",
+        style: TextStyle(color: AppColors.greyS600),
+      ),
     ),
     actions: [
       FlatButton(
@@ -169,36 +123,3 @@ Widget confirmDialog(BuildContext context) {
     ],
   );
 }
-
-Widget selectImageToTask({context, model}) {
-  return AlertDialog(
-    title: Text(
-      "Select Icon :",
-      style: TextStyle(color: AppColors.deebOrangeS300),
-    ),
-    content: SizedBox(
-      height: 160,
-      child: GridView.builder(
-        itemCount: assetsImage.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 20,
-          mainAxisSpacing: 20,
-        ),
-        itemBuilder: (context, index) => circleImage(
-          id: model['id'],
-          context: context,
-          image: assetsImage[index],
-        ),
-      ),
-    ),
-  );
-}
-
-Widget circleImage({required context, required id, required image}) => InkWell(
-      child: CircleAvatar(backgroundImage: AssetImage(image), minRadius: 25),
-      onTap: () {
-        TodoAppCubit.get(context).updateImage(image: image, id: id);
-        Navigator.pop(context);
-      },
-    );

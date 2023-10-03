@@ -39,7 +39,7 @@ class AddTask extends StatelessWidget {
   }
 
   List<Widget> textFormFieldItems(context) => [
-        myTextFormField(
+        CustomTextFormField(
           label: 'Task Title',
           typeInput: TextInputType.text,
           prefixIcon: const Icon(Icons.title),
@@ -50,7 +50,7 @@ class AddTask extends StatelessWidget {
           },
         ),
         const SizedBox(height: 15),
-        myTextFormField(
+        CustomTextFormField(
           label: 'Task Time',
           typeInput: TextInputType.datetime,
           textEditingController: timeController,
@@ -62,7 +62,7 @@ class AddTask extends StatelessWidget {
           },
         ),
         const SizedBox(height: 15),
-        myTextFormField(
+        CustomTextFormField(
           label: 'Task Date',
           typeInput: TextInputType.datetime,
           textEditingController: dateController,

@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-
 import '../styles/colors.dart';
 
-void showToastShort({required String text, required ToastStates state}) =>
-    Fluttertoast.showToast(
-      msg: text,
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.SNACKBAR,
-      timeInSecForIosWeb: 5,
-      backgroundColor: chooseToastColor(state),
-      textColor: AppColors.white,
-      fontSize: 16.0,
+void showToastShort(
+        {required String text, required ToastStates state, required context}) =>
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        backgroundColor: chooseToastColor(state),
+      ),
     );
 
 // ignore: constant_identifier_names

@@ -49,6 +49,7 @@ class _HomeLayoutState extends State<HomeLayout> {
         if (state is InsertDatabaseState) Navigator.pop(context);
         if (state is ChangeBottomSheetOpenState) {
           showToastShort(
+            context: context,
             text: 'When Finished, Click on the add button',
             state: ToastStates.WARNING,
           );
@@ -59,7 +60,9 @@ class _HomeLayoutState extends State<HomeLayout> {
         return Scaffold(
           key: scaffoldKey,
           backgroundColor: AppColors.white,
-          appBar: AppBar(title: Text(cubit.title[cubit.currentIndex])),
+          appBar: AppBar(
+            title: Text(cubit.title[cubit.currentIndex]),
+          ),
           body: ConditionalBuilder(
             condition: state is! GetDatabaseLoadingState,
             builder: (context) => PageView(
@@ -73,7 +76,7 @@ class _HomeLayoutState extends State<HomeLayout> {
           floatingActionButton: floatingActionButton(cubit),
           bottomNavigationBar: BottomNavigationBar(
             elevation: 0.0,
-            items: bottomNavigationBarItems,
+            items: cubit.bottomNavigationBarItems,
             currentIndex: cubit.currentIndex,
             type: BottomNavigationBarType.fixed,
             backgroundColor: AppColors.greyS100,
@@ -106,18 +109,3 @@ class _HomeLayoutState extends State<HomeLayout> {
     );
   }
 }
-
-const List<BottomNavigationBarItem> bottomNavigationBarItems = [
-  BottomNavigationBarItem(
-    icon: Icon(Icons.menu),
-    label: 'Tasks',
-  ),
-  BottomNavigationBarItem(
-    icon: Icon(Icons.check_circle_outline_rounded),
-    label: 'Done',
-  ),
-  BottomNavigationBarItem(
-    icon: Icon(Icons.archive_rounded),
-    label: 'Archive',
-  ),
-];
