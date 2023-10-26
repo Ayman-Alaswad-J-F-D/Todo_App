@@ -1,12 +1,16 @@
 // ignore_for_file: import_of_legacy_library_into_null_safe, avoid_print, equal_keys_in_map
 
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:sqflite/sqflite.dart';
+import 'dart:developer';
+import 'dart:io';
 
-import '../../modules/archive_tasks/archive_tasks_screen.dart';
-import '../../modules/done_tasks/done_tasks_screen.dart';
-import '../../modules/new_tasks/new_tasks_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:todo_app/model/task_model.dart';
+
+import '../constants/constants.dart';
 
 part 'states.dart';
 
@@ -14,105 +18,143 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
   TodoAppCubit() : super(AppInitialState());
   static TodoAppCubit get(context) => BlocProvider.of(context);
 
-  int currentIndex = 0;
+  int selected = 0;
+  String imageFromCategory = Constants.categoryTask;
 
-  List<Widget> screen = const [
-    NewTasksScreen(),
-    DoneTasksScreen(),
-    ArchiveTasksScreen(),
-  ];
+  File imageFromGallery = File('');
 
-  List<String> title = ['New Tasks', 'Done Tasks', 'Archive Tasks'];
-
-  void chagedIndex(int index) {
-    currentIndex = index;
-    emit(BottomNavBarState());
+  void select(index) async {
+    selected = index;
+    switch (index) {
+      case 0:
+        imageFromCategory = Constants.categoryTask;
+        break;
+      case 1:
+        imageFromCategory = Constants.categoryGoal;
+        break;
+      case 2:
+        imageFromCategory = Constants.categoryEvent;
+        break;
+    }
+    if (imageFromGallery.isAbsolute) imageFromGallery = File('');
+    emit(SelectedImageState());
   }
 
-  List<BottomNavigationBarItem> bottomNavigationBarItems = const [
-    BottomNavigationBarItem(
-      icon: Icon(Icons.menu),
-      label: 'Tasks',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.check_circle_outline_rounded),
-      label: 'Done',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.archive_rounded),
-      label: 'Archive',
-    ),
-  ];
+  Future pickImage() async {
+    try {
+      final image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+      );
+      if (image == null) return;
+      imageFromGallery = File(image.path);
+      print(imageFromGallery);
 
-  bool isBottomSheetShow = false;
-  IconData fabIcon = Icons.edit;
-
-  void changeBottomSheetStata({required bool isShow, required IconData icon}) {
-    if (isShow) {
-      isBottomSheetShow = isShow;
-      fabIcon = icon;
-      emit(ChangeBottomSheetOpenState());
-    } else {
-      isBottomSheetShow = isShow;
-      fabIcon = icon;
-      emit(ChangeBottomSheetCloseState());
+      emit(SelectedImageState());
+    } on PlatformException catch (e) {
+      print('Failed to pick image : $e');
     }
   }
 
   Database? database;
-  List<Map> newTasks = [];
-  List<Map> doneTasks = [];
-  List<Map> archiveTasks = [];
+  List<TaskModel> newTasks = [];
+  List<TaskModel> doneTasks = [];
+  List<TaskModel> archiveTasks = [];
+
+  final String tabelTodo = 'tasks';
+  final String columnId = 'id';
+  final String columnTitle = 'title';
+  final String columnTime = 'time';
+  final String columnDate = 'date';
+  final String columnStatus = 'status';
+  final String columnNote = 'note';
+  final String columnImage = 'image';
+
+  late final Image appIcon;
 
   void createDatabase() {
     // open the database
-    openDatabase('todo.db', version: 1, onCreate: (database, version) async {
+    openDatabase('todoDB.db', version: 1, onCreate: (database, version) async {
       // When creating the db, create the table
-      print('database Created');
+      log('Database Create', name: 'Create Function');
       await database
           .execute(
-            'CREATE TABLE tasks (id INTEGER PRIMARY KEY, title TEXT, date TEXT, time TEXT,status TEXT,image TEXT)',
+            '''CREATE TABLE $tabelTodo 
+            (
+             $columnId INTEGER PRIMARY KEY,
+             $columnTitle TEXT, $columnDate TEXT,
+             $columnTime TEXT, $columnStatus TEXT,
+             $columnNote TEXT, $columnImage TEXT
+            )
+            ''',
           )
-          .then((value) => print('Table created'))
-          .catchError(
-              (error) => print('Error when created table ${error.toString()}'));
+          .then((value) => log('Tabel Created', name: 'Create Function'))
+          .catchError((error) =>
+              log('Database Error', error: error, name: 'Create Function'));
     }, onOpen: (database) {
+      log('Database Opened', name: 'Create Function');
       getFromDatabase(database);
-      print('database opened');
     }).then((value) {
       database = value;
       emit(CreateDatabaseState());
     });
   }
 
-  insertDatabase({String? title, String? time, String? date}) async {
-    await database?.transaction((txn) {
-      txn
+  String? checkSelectedImage() {
+    String? image = imageFromGallery.path != '' ? imageFromGallery.path : null;
+    image ??= imageFromCategory;
+    log('Image Is : => ' + image);
+    return image;
+  }
+
+  Future<void> insertDatabase({
+    String? title,
+    String? time,
+    String? date,
+    String? note,
+    // String? image,
+  }) async {
+    //? If Not Selected Image From Gallery  => is null
+    String? image = checkSelectedImage();
+
+    await database?.transaction((txn) async {
+      log('Insert To Database', name: 'Insert Function');
+
+      await txn
           .rawInsert(
-        'INSERT INTO tasks(title, time, date, status,image) VALUES("$title","$time","$date","new","")',
+        'INSERT INTO $tabelTodo($columnTitle, $columnTime, $columnDate, $columnStatus, $columnNote, $columnImage) VALUES("$title","$time","$date","new","$note","$image")',
       )
           .then((value) {
-        print('$value Insert Successfully');
+        log('$value Insert is Successfully', name: 'Insert Function');
         emit(InsertDatabaseState());
         getFromDatabase(database);
       }).catchError((error) {
         print('Error when inserting new record ${error.toString()}');
       });
-      return null;
     });
   }
 
-  void updateStatus({required String status, required int id}) async {
-    database!.rawUpdate(
-        'UPDATE tasks SET status = ? WHERE id = ?', [status, id]).then((value) {
+  void updateStatus({
+    required String status,
+    required int id,
+    bool? isChecked,
+  }) async {
+    log('Update To Database', name: 'Update Function');
+    await database!.rawUpdate(
+      'UPDATE $tabelTodo SET $columnStatus = ? WHERE id = ?',
+      [status, id],
+    ).then((value) {
+      log('Update is Successfully', name: 'Update Function');
       getFromDatabase(database);
       emit(UpdateDatabaseState());
     });
   }
 
+  // ! Not Used After
   void updateImage({required String image, required int id}) async {
-    database!.rawUpdate(
-        'UPDATE tasks SET image = ? WHERE id = ?', [image, id]).then((value) {
+    await database!.rawUpdate(
+        'UPDATE $tabelTodo SET $columnImage = ? WHERE id = ?',
+        [image, id]).then((value) {
       print(image);
       print(value);
       getFromDatabase(database);
@@ -121,27 +163,48 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
   }
 
   void deleteTask({required int id}) async {
-    database!.rawDelete('DELETE FROM tasks WHERE id = ?', [id]).then((value) {
+    log('Delete From Database', name: 'Delete Function');
+    await database!
+        .rawDelete('DELETE FROM $tabelTodo WHERE id = ?', [id]).then((value) {
+      log('Delete is Successfully', name: 'Delete Function');
       getFromDatabase(database);
       emit(DeleteDatabaseState());
     });
   }
 
-  void getFromDatabase(database) {
-    newTasks = [];
-    doneTasks = [];
-    archiveTasks = [];
+  void getFromDatabase(Database? database) async {
     emit(GetDatabaseLoadingState());
-    database!.rawQuery('SELECT * FROM tasks').then((value) {
-      value.forEach((element) {
-        if (element['status'] == 'new') {
-          newTasks.add(element);
-        } else if (element['status'] == 'done') {
-          doneTasks.add(element);
-        } else {
-          archiveTasks.add(element);
+    log('Get All Data From Database', name: 'Get Data Function');
+    await database!.rawQuery('SELECT * FROM $tabelTodo').then((value) {
+      //* This Query is return to all data from database .. meaning a to list new/done/archive
+      //* => if condition don't true
+      //? Therefore, the condition was met only when the database was created
+      log('Get Data is Successfully', name: 'Get Data Function');
+      if (value.isEmpty) {
+        emit(IsEmptyDatebaseState());
+        return;
+      }
+      newTasks.clear();
+      doneTasks.clear();
+      archiveTasks.clear();
+      log('Start Add Data to Task List', name: 'Get Data Function');
+      for (var element in value) {
+        final task = TaskModel.fromMap(element);
+        switch (task.status) {
+          case 'new':
+            newTasks.add(task);
+            break;
+
+          case 'done':
+            doneTasks.add(task);
+            break;
+
+          default:
+            archiveTasks.add(task);
+            break;
         }
-      });
+      }
+      log('Done Added Data to Task List', name: 'Get Data Function');
       emit(GetDatabaseState());
     });
   }
