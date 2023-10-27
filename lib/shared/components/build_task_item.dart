@@ -40,9 +40,8 @@ class BuildTaskItem extends StatelessWidget {
         // key: Key(index.toString()),
         key: UniqueKey(),
         background: backDelete(MainAxisAlignment.start),
-        secondaryBackground: data.status == 'archive'
-            ? backDelete(MainAxisAlignment.end)
-            : backArchive(),
+        secondaryBackground:
+            data.isArchive ? backDelete(MainAxisAlignment.end) : backArchive(),
 
         onDismissed: (DismissDirection direction) =>
             onDismissedImpl(direction, cubit),
@@ -50,68 +49,103 @@ class BuildTaskItem extends StatelessWidget {
         confirmDismiss: (DismissDirection direction) async =>
             await confirmDismissImpl(direction, context),
 
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TaskWidget(
-                    taskTitle: data.title,
-                    taskTime: data.time,
-                    image: data.image,
-                    opacity: isDone ? .4 : 1,
-                    checkBoxValue: data.status == 'new' ? false : true,
-                    decoration: isDone ? TextDecoration.lineThrough : null,
-                    onChange: (isCheck) {
-                      if (isCheck!) {
-                        cubit.updateStatus(id: data.id, status: 'done');
-                        showToastShort(
-                          text: 'Done',
-                          state: ToastStates.Done,
-                          context: context,
-                          padLeft: widthScreen(context) / 2.5,
-                          padRight: widthScreen(context) / 2.5,
-                        );
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ],
+        child: TaskWidget(
+          taskTitle: data.title,
+          taskTime: data.time,
+          image: data.image,
+          opacity: isDone ? .4 : 1,
+          checkBoxValue: data.status == 'done',
+          decoration: isDone ? TextDecoration.lineThrough : null,
+          onChange: (isCheck) {
+            if (isCheck!) {
+              cubit.updateStatus(id: data.id, status: 'done');
+              showToastShort(
+                text: 'Done',
+                state: ToastStates.Done,
+                context: context,
+                padLeft: widthScreen(context) / 2.5,
+                padRight: widthScreen(context) / 2.5,
+              );
+            }
+          },
         ),
       ),
     );
   }
 
-  Future<dynamic> confirmDismissImpl(
-    DismissDirection direction,
-    BuildContext context,
-  ) async {
-    if (direction == DismissDirection.startToEnd) {
-      return await confirmDelete(context);
+//* Confirm & Dismissed Method
+  Future<bool?> confirmDismissImpl(DismissDirection direction, context) async {
+    if (direction == DismissDirection.endToStart && !data.isArchive) {
+      return await confirmDialogArchive(context);
     } else {
-      if (data.status == 'archive') {
-        return await confirmDelete(context);
-      } else {
-        return await confirmArchive(context);
-      }
+      return await confirmDialogDelete(context);
     }
   }
 
   void onDismissedImpl(DismissDirection direction, TodoAppCubit cubit) {
-    if (direction == DismissDirection.endToStart) {
-      if (data.status == 'archive') {
-        cubit.deleteTask(id: data.id);
-      } else {
-        cubit.updateStatus(status: 'archive', id: data.id);
-      }
+    if (direction == DismissDirection.endToStart && !data.isArchive) {
+      cubit.updateArchive(isArchive: true, id: data.id);
     } else {
       cubit.deleteTask(id: data.id);
     }
   }
 }
 
+//* Style Confirm Dialog Method
+Future confirmDialogDelete(context) => confirmDialog(
+      context: context,
+      titleDialog: 'Delete Confirmation',
+      questionDialog: 'Are you sure you want to delete this task ?',
+      labelButton: 'DELETE',
+      color: AppColors.red,
+    );
+
+Future confirmDialogArchive(context) => confirmDialog(
+      context: context,
+      titleDialog: 'Archive Confirmation',
+      questionDialog: 'Are you want to Add this task to archive ?',
+      labelButton: 'ADD',
+      color: AppColors.primary.shade400,
+    );
+
+Future confirmDialog({
+  required BuildContext context,
+  required String titleDialog,
+  required String questionDialog,
+  required String labelButton,
+  required Color color,
+}) {
+  return showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: LabelWidget(title: titleDialog, color: color),
+      content: SizedBox(
+        width: widthScreen(context) / 1.2,
+        child: LabelWidget(
+          title: questionDialog,
+          color: AppColors.greyS600,
+          fontWeight: FontWeight.normal,
+          fontSize: 15,
+        ),
+      ),
+      actions: [
+        FlatButton(
+          child: const LabelWidget(
+            title: 'Cancel',
+            fontWeight: FontWeight.normal,
+          ),
+          onPressed: () => Navigator.of(context).pop(false),
+        ),
+        FlatButton(
+          child: LabelWidget(title: labelButton, color: color),
+          onPressed: () => Navigator.of(context).pop(true),
+        ),
+      ],
+    ),
+  );
+}
+
+//* Style Background Dismissible Widget
 Widget backDismissible({
   required MainAxisAlignment mainAxisAlignment,
   required Color color,
@@ -140,62 +174,6 @@ Widget backDismissible({
     ),
   );
 }
-
-Widget confirmDialog({
-  required BuildContext context,
-  required String titleDialog,
-  required String questionDialog,
-  required String labelButton,
-  required Color color,
-}) {
-  return AlertDialog(
-    title: LabelWidget(title: titleDialog, color: color),
-    content: SizedBox(
-      width: widthScreen(context) / 1.2,
-      child: LabelWidget(
-        title: questionDialog,
-        color: AppColors.greyS600,
-        fontWeight: FontWeight.normal,
-        fontSize: 15,
-      ),
-    ),
-    actions: [
-      FlatButton(
-        child: const LabelWidget(
-          title: 'Cancel',
-          fontWeight: FontWeight.normal,
-        ),
-        onPressed: () => Navigator.of(context).pop(false),
-      ),
-      FlatButton(
-        child: LabelWidget(title: labelButton, color: color),
-        onPressed: () => Navigator.of(context).pop(true),
-      ),
-    ],
-  );
-}
-
-Future confirmDelete(context) => showDialog(
-      context: context,
-      builder: (context) => confirmDialog(
-        context: context,
-        titleDialog: 'Delete Confirmation',
-        questionDialog: 'Are you sure you want to delete this task ?',
-        labelButton: 'DELETE',
-        color: AppColors.red,
-      ),
-    );
-
-Future confirmArchive(context) => showDialog(
-      context: context,
-      builder: (context) => confirmDialog(
-        context: context,
-        titleDialog: 'Archive Confirmation',
-        questionDialog: 'Are you want to Add this task to archive ?',
-        labelButton: 'ADD',
-        color: AppColors.primary.shade400,
-      ),
-    );
 
 Widget backDelete(MainAxisAlignment mainAxisAlignment) => backDismissible(
       label: 'Move To Trash',
