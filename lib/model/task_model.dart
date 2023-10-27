@@ -1,6 +1,7 @@
 class TaskModel {
   int id;
   String title, time, date, status, note, image;
+  bool isArchive;
 
   TaskModel({
     required this.id,
@@ -10,6 +11,7 @@ class TaskModel {
     required this.status,
     required this.note,
     required this.image,
+    required this.isArchive,
   });
 
   factory TaskModel.fromMap(Map<String, dynamic> item) {
@@ -21,6 +23,7 @@ class TaskModel {
       status: item['status'],
       note: item['note'],
       image: item['image'],
+      isArchive: item['isArchive'] == 1,
     );
   }
 
@@ -33,6 +36,7 @@ class TaskModel {
       'status': status,
       'note': note,
       'image': image,
+      'isArchive': isArchive == true ? 1 : 0,
     };
   }
 }
