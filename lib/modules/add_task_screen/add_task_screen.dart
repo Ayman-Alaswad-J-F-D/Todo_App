@@ -349,10 +349,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   note: noteController.text,
                 )
                     .then((_) {
-                  // titleController.clear();
-                  // dateController.clear();
-                  // timeController.clear();
-                  // noteController.clear();
+                  titleController.clear();
+                  dateController.clear();
+                  timeController.clear();
+                  noteController.clear();
                 });
               }
             },
