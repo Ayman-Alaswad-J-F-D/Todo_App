@@ -69,6 +69,7 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
   final String columnStatus = 'status';
   final String columnNote = 'note';
   final String columnImage = 'image';
+  final String columnIsArchive = 'isArchive';
 
   late final Image appIcon;
 
@@ -84,7 +85,8 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
              $columnId INTEGER PRIMARY KEY,
              $columnTitle TEXT, $columnDate TEXT,
              $columnTime TEXT, $columnStatus TEXT,
-             $columnNote TEXT, $columnImage TEXT
+             $columnNote TEXT, $columnImage TEXT,
+             $columnIsArchive INTEGER
             )
             ''',
           )
@@ -112,7 +114,6 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
     String? time,
     String? date,
     String? note,
-    // String? image,
   }) async {
     //? If Not Selected Image From Gallery  => is null
     String? image = checkSelectedImage();
@@ -120,11 +121,16 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
     await database?.transaction((txn) async {
       log('Insert To Database', name: 'Insert Function');
 
-      await txn
-          .rawInsert(
-        'INSERT INTO $tabelTodo($columnTitle, $columnTime, $columnDate, $columnStatus, $columnNote, $columnImage) VALUES("$title","$time","$date","new","$note","$image")',
-      )
-          .then((value) {
+      await txn.rawInsert(
+        '''
+         INSERT INTO $tabelTodo
+         (
+         $columnTitle, $columnTime, $columnDate, $columnStatus, 
+         $columnNote, $columnImage,$columnIsArchive
+         ) 
+         VALUES("$title","$time","$date","new","$note","$image",0)
+         ''',
+      ).then((value) {
         log('$value Insert is Successfully', name: 'Insert Function');
         emit(InsertDatabaseState());
         getFromDatabase(database);
@@ -134,17 +140,28 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
     });
   }
 
-  void updateStatus({
-    required String status,
-    required int id,
-    bool? isChecked,
-  }) async {
-    log('Update To Database', name: 'Update Function');
+  void updateStatus({required String status, required int id}) async {
+    log('Update To Database', name: 'Update Status Function');
     await database!.rawUpdate(
       'UPDATE $tabelTodo SET $columnStatus = ? WHERE id = ?',
       [status, id],
     ).then((value) {
-      log('Update is Successfully', name: 'Update Function');
+      log('Update is Successfully', name: 'Update Status Function');
+      getFromDatabase(database);
+      emit(UpdateDatabaseState());
+    });
+  }
+
+  void updateArchive({
+    required bool isArchive,
+    required int id,
+  }) async {
+    log('Update To Database', name: 'Update Archive Function');
+    await database!.rawUpdate(
+      'UPDATE $tabelTodo SET $columnIsArchive = ? WHERE id = ?',
+      [isArchive ? 1 : 0, id],
+    ).then((value) {
+      log('Update is Successfully', name: 'Update Archive Function');
       getFromDatabase(database);
       emit(UpdateDatabaseState());
     });
@@ -190,18 +207,12 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
       log('Start Add Data to Task List', name: 'Get Data Function');
       for (var element in value) {
         final task = TaskModel.fromMap(element);
-        switch (task.status) {
-          case 'new':
-            newTasks.add(task);
-            break;
-
-          case 'done':
-            doneTasks.add(task);
-            break;
-
-          default:
-            archiveTasks.add(task);
-            break;
+        if (task.status == 'new' && !task.isArchive) {
+          newTasks.add(task);
+        } else if (task.status == 'done' && !task.isArchive) {
+          doneTasks.add(task);
+        } else {
+          archiveTasks.add(task);
         }
       }
       log('Done Added Data to Task List', name: 'Get Data Function');
