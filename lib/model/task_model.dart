@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class TaskModel {
   int id;
   String title, time, date, status, note, image;
@@ -39,4 +41,7 @@ class TaskModel {
       'isArchive': isArchive == true ? 1 : 0,
     };
   }
+
+  @override
+  String toString() => jsonEncode(toMap());
 }
