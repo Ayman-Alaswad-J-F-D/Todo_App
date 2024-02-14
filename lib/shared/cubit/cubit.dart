@@ -304,6 +304,16 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
     emit(SortingListState());
   }
 
-  TaskModel getTaskById(int id) =>
-      newTasks.singleWhere((task) => task.id == id);
+  TaskModel getTaskById(int id) => newTasks.singleWhere(
+        (task) => task.id == id,
+        orElse: () => _getFromDone(id),
+      );
+
+  TaskModel _getFromDone(int id) => doneTasks.singleWhere(
+        (task) => task.id == id,
+        orElse: () => _getFromArchive(id),
+      );
+
+  TaskModel _getFromArchive(int id) =>
+      archiveTasks.singleWhere((task) => task.id == id);
 }
