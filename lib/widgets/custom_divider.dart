@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:todo_app/shared/styles/colors.dart';
 import 'package:todo_app/widgets/list_view_animation.dart';
 
 class CustomDivider extends StatelessWidget {
@@ -20,7 +20,11 @@ class CustomDivider extends StatelessWidget {
       index: index,
       delay: delayAnimation,
       verticalOffset: verticalOffsetAnimation,
-      child: const Divider(thickness: 2, height: 0),
+      child: Divider(
+        height: 0,
+        thickness: 0.8,
+        color: AppColors.purpleOpa,
+      ),
     );
   }
 }
