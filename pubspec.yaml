@@ -38,19 +38,23 @@ dependencies:
   sqflite: ^2.0.3
   intl: ^0.17.0
   path:
-  image_picker: 0.8.4+11
+  image_picker:
   flutter_svg:
   flutter_screenutil:
   flutter_staggered_animations: 1.0.0
   conditional_builder_null_safety: ^0.0.6
-  # flutter_local_notifications: 5.0.0
+  flutter_local_notifications: ^16.3.1+1
+  flutter_native_splash: ^2.3.9
+  flutter_timezone:
+  rxdart: ^0.27.7
+  get_it:
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^1.0.0
-  flutter_launcher_icons: "^0.10.0"
+  flutter_launcher_icons: "^0.13.1"
 
 # The "flutter_lints" package below contains a set of recommended lints to
 # encourage good coding practices. The lint set provided by the package is
@@ -87,18 +91,18 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  fonts:
-    - family: Tajawal
-      fonts:
-        - asset: fonts/Tajawal-Black.ttf
-        - asset: fonts/Tajawal-Regular.ttf
-        - asset: fonts/Tajawal-Bold.ttf
-    - family: Lora
-      fonts:
-        - asset: fonts/Lora-VariableFont_wght.ttf
-    - family: Pacifico
-      fonts:
-        - asset: fonts/Pacifico-Regular.ttf
+  # fonts:
+  # - family: Tajawal
+  #   fonts:
+  #     - asset: fonts/Tajawal-Black.ttf
+  #     - asset: fonts/Tajawal-Regular.ttf
+  #     - asset: fonts/Tajawal-Bold.ttf
+  # - family: Lora
+  #   fonts:
+  #     - asset: fonts/Lora-VariableFont_wght.ttf
+  # - family: Pacifico
+  #   fonts:
+  #     - asset: fonts/Pacifico-Regular.ttf
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
