@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:todo_app/shared/styles/colors.dart';
 
 class CustomButton extends StatelessWidget {
   const CustomButton({
@@ -18,8 +19,10 @@ class CustomButton extends StatelessWidget {
       child: ElevatedButton(
         child: Text(text),
         style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(50.r),
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+          shape: ContinuousRectangleBorder(
+            borderRadius: BorderRadius.circular(35.r),
           ),
           padding: const EdgeInsets.all(6),
           minimumSize: Size(double.infinity, 44.spMin),
