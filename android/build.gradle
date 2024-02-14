@@ -6,7 +6,7 @@ buildscript {
         agp_version = '7.4.2'
         agp_version1 = agp_version
     }
-    ext.kotlin_version = '1.6.21'
+    ext.kotlin_version = '1.8.22'
     repositories {
         google()
         mavenCentral()
@@ -31,6 +31,6 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
-task clean(type: Delete) {
+tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
