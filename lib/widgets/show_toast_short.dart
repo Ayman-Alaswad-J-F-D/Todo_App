@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:todo_app/shared/constants/constants.dart';
 import 'package:todo_app/widgets/label_widget.dart';
+
 import '../shared/styles/colors.dart';
 
 void showToastShort({
@@ -22,6 +23,7 @@ void showToastShort({
           fontSize: fontSize,
         ),
         backgroundColor: chooseToastColor(state),
+        padding: const EdgeInsets.all(8),
         margin: EdgeInsets.only(
           bottom: 55.h,
           left: padLeft ?? widthScreen(context) / 3,
