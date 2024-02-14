@@ -1,31 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import 'package:todo_app/model/task_model.dart';
 import 'package:todo_app/shared/components/background_header.dart';
 import 'package:todo_app/shared/constants/constants.dart';
+import 'package:todo_app/shared/cubit/cubit.dart';
 import 'package:todo_app/shared/extension/extension.dart';
 import 'package:todo_app/shared/styles/colors.dart';
 import 'package:todo_app/widgets/label_widget.dart';
 
 import '../../shared/function/check_image.dart';
 
-class DetailsScreen extends StatelessWidget {
+class DetailsScreen extends StatefulWidget {
   const DetailsScreen({
     Key? key,
-    required this.model,
-    required this.index,
+    required this.taskId,
   }) : super(key: key);
 
-  final TaskModel model;
-  final int index;
+  final int taskId;
 
-  Color _containerColor() {
-    switch (model.image) {
-      case Constants.categoryEvent:
+  @override
+  State<DetailsScreen> createState() => _DetailsScreenState();
+}
+
+class _DetailsScreenState extends State<DetailsScreen> {
+  late TaskModel task;
+  late TodoAppCubit cubit;
+
+  @override
+  void initState() {
+    _setup();
+    super.initState();
+  }
+
+  void _setup() {
+    cubit = TodoAppCubit.get(context);
+    task = cubit.getTaskById(widget.taskId);
+    cubit.cancelNotification(task.id, task.title);
+  }
+
+  Color _containerColor(TaskModel task) {
+    switch (task.image) {
+      case Constants.categoryEventIcon:
         return AppColors.purpleOpa;
 
-      case Constants.categoryGoal:
+      case Constants.categoryGoalIcon:
         return AppColors.amberOpa;
 
       default:
@@ -42,6 +60,7 @@ class DetailsScreen extends StatelessWidget {
           Expanded(
             child: BackgroundHeader(
               headerLabel: 'Details Task',
+              positionedTop: 15,
               leadingIcon: Icons.arrow_back_ios_new_rounded,
               leadingClick: () => context.backScreen(),
             ),
@@ -49,19 +68,18 @@ class DetailsScreen extends StatelessWidget {
           Expanded(
             flex: 5,
             child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(14.0),
                 child: Column(
                   children: [
                     Stack(
                       alignment: AlignmentDirectional.topCenter,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(top: 18),
+                          padding: const EdgeInsets.only(top: 6),
                           child: SizedBox(
                             child: checkImage(
-                              image: model.image,
+                              image: task.image,
                               width: widthScreen(context) / 3.8,
                             ),
                           ),
@@ -70,54 +88,54 @@ class DetailsScreen extends StatelessWidget {
                           alignment: Alignment.topLeft,
                           child: Container(
                             margin: EdgeInsets.symmetric(horizontal: 5.0.w),
-                            padding: EdgeInsets.all(15.0.w),
+                            padding: EdgeInsets.all(12.0.w),
                             decoration: BoxDecoration(
-                              color: _containerColor(),
+                              color: _containerColor(task),
                               shape: BoxShape.circle,
                             ),
                             child: LabelWidget(
-                              title: '${index + 1}',
+                              title: '${task.id}',
                               color: AppColors.primary,
-                              fontSize: 20,
+                              fontSize: 18,
                             ),
                           ),
                         ),
                       ],
                     ),
                     LabelWidget(
-                      title: model.title,
+                      title: task.title,
                       color: AppColors.primary,
                       textAlign: TextAlign.center,
                       fontSize: 22,
-                      pT: 18,
-                      pB: 18,
+                      pT: 16,
+                      pB: 16,
                     ),
                     CardWidget(
                       title: 'Note :',
-                      info: model.note,
+                      info: task.note,
                       width: widthScreen(context),
-                      color: _containerColor(),
+                      color: _containerColor(task),
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         CardWidget(
                           title: 'Date :',
-                          info: model.date,
-                          color: _containerColor(),
+                          info: task.date,
+                          color: _containerColor(task),
                         ),
                         CardWidget(
                           title: 'Time :',
-                          info: model.time,
-                          color: _containerColor(),
+                          info: task.time,
+                          color: _containerColor(task),
                         ),
                       ],
                     ),
                     CardWidget(
                       title: 'Status :',
-                      info: '${model.status.toUpperCase()}  Task',
+                      info: '${task.status.toUpperCase()}  Task',
                       fontSize: 17,
-                      color: _containerColor(),
+                      color: _containerColor(task),
                       width: widthScreen(context),
                     ),
                   ],
