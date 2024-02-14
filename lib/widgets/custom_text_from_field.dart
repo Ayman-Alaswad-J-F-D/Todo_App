@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../shared/styles/colors.dart';
-import '../shared/styles/styles.dart';
 
 class CustomTextFormField extends StatelessWidget {
   const CustomTextFormField({
@@ -84,7 +83,7 @@ class CustomTextFormField extends StatelessWidget {
         filled: filledNeed,
         fillColor: fillColor,
         labelText: label,
-        labelStyle: const TextStyle(fontFamily: AppFonts.primaryFont),
+        // labelStyle: const TextStyle(fontFamily: AppFonts.primaryFont),
         hintText: hintText,
         hintStyle: TextStyle(
           color: colorHintText,
