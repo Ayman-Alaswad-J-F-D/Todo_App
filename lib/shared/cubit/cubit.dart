@@ -1,5 +1,4 @@
-// ignore_for_file: import_of_legacy_library_into_null_safe, avoid_print, equal_keys_in_map
-
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
@@ -8,9 +7,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:todo_app/app/global/global.dart';
+import 'package:todo_app/app/services/local_notifications_service.dart';
 import 'package:todo_app/model/task_model.dart';
 
 import '../constants/constants.dart';
+import '../constants/strings.dart';
 
 part 'states.dart';
 
@@ -18,22 +20,30 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
   TodoAppCubit() : super(AppInitialState());
   static TodoAppCubit get(context) => BlocProvider.of(context);
 
-  int selected = 0;
-  String imageFromCategory = Constants.categoryTask;
+  final _localNotificationsService =
+      Global.getIt.get<LocalNotificationsService>();
 
+  void cancelNotification(int id, String title) => _localNotificationsService
+      .cancelNotificationWhenGoToScreen(id, title: title);
+
+  void cancelGroupNotifications() =>
+      _localNotificationsService.cancelGroupNotificationsWhenGoToScreen();
+
+  int selected = 0;
+  String imageFromCategory = Constants.categoryTaskIcon;
   File imageFromGallery = File('');
 
-  void select(index) async {
+  void selectCategoryIcon(int index) {
     selected = index;
     switch (index) {
       case 0:
-        imageFromCategory = Constants.categoryTask;
+        imageFromCategory = Constants.categoryTaskIcon;
         break;
       case 1:
-        imageFromCategory = Constants.categoryGoal;
+        imageFromCategory = Constants.categoryGoalIcon;
         break;
       case 2:
-        imageFromCategory = Constants.categoryEvent;
+        imageFromCategory = Constants.categoryEventIcon;
         break;
     }
     if (imageFromGallery.isAbsolute) imageFromGallery = File('');
@@ -48,30 +58,18 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
       );
       if (image == null) return;
       imageFromGallery = File(image.path);
-      print(imageFromGallery);
-
+      debugPrint(imageFromGallery.toString());
       emit(SelectedImageState());
     } on PlatformException catch (e) {
-      print('Failed to pick image : $e');
+      log('Failed to pick image : $e');
     }
   }
 
   Database? database;
-  List<TaskModel> newTasks = [];
-  List<TaskModel> doneTasks = [];
-  List<TaskModel> archiveTasks = [];
-
-  final String tabelTodo = 'tasks';
-  final String columnId = 'id';
-  final String columnTitle = 'title';
-  final String columnTime = 'time';
-  final String columnDate = 'date';
-  final String columnStatus = 'status';
-  final String columnNote = 'note';
-  final String columnImage = 'image';
-  final String columnIsArchive = 'isArchive';
-
-  late final Image appIcon;
+  final List<TaskModel> newTasks = [];
+  final List<TaskModel> doneTasks = [];
+  final List<TaskModel> archiveTasks = [];
+  TaskModel? _lastNewTask;
 
   void createDatabase() {
     // open the database
@@ -102,25 +100,17 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
     });
   }
 
-  String? checkSelectedImage() {
-    String? image = imageFromGallery.path != '' ? imageFromGallery.path : null;
-    image ??= imageFromCategory;
-    log('Image Is : => ' + image);
-    return image;
-  }
-
   Future<void> insertDatabase({
-    String? title,
-    String? time,
-    String? date,
-    String? note,
+    required String title,
+    required String time,
+    required String date,
+    required String note,
   }) async {
-    //? If Not Selected Image From Gallery  => is null
-    String? image = checkSelectedImage();
+    //? If Not Selected Image From Gallery => return imageFromCategory
+    final String? image = _checkSelectedImage();
 
     await database?.transaction((txn) async {
       log('Insert To Database', name: 'Insert Function');
-
       await txn.rawInsert(
         '''
          INSERT INTO $tabelTodo
@@ -128,95 +118,192 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
          $columnTitle, $columnTime, $columnDate, $columnStatus, 
          $columnNote, $columnImage,$columnIsArchive
          ) 
-         VALUES("$title","$time","$date","new","$note","$image",0)
+         VALUES("$title","$time","$date","$statusTask","$note","$image",$isArchive)
          ''',
-      ).then((value) {
-        log('$value Insert is Successfully', name: 'Insert Function');
-        emit(InsertDatabaseState());
-        getFromDatabase(database);
+      ).then((count) {
+        log('$count Insert is Successfully', name: 'Insert Function');
+        getFromDatabase(database).then((_) {
+          _scheduleNotificationForNewTask(count, title, time, date);
+          if (imageFromGallery.isAbsolute) imageFromGallery = File('');
+          emit(InsertDatabaseState());
+        });
       }).catchError((error) {
-        print('Error when inserting new record ${error.toString()}');
+        debugPrint('Error when inserting new record ${error.toString()}');
       });
     });
   }
 
+  String? _checkSelectedImage() => imageFromGallery.path.isNotEmpty
+      ? _convertImageToBase64()
+      : imageFromCategory;
+
+  String _convertImageToBase64() =>
+      base64Encode(imageFromGallery.readAsBytesSync());
+
+  void _scheduleNotificationForNewTask(id, titleTask, time, date) {
+    _localNotificationsService.scheduleNotification(
+      id: id,
+      title: titleNotifications,
+      body: titleTask,
+      time: time,
+      date: date,
+      iconNotification: _getIconNotification(),
+      payload: _lastNewTask!.title,
+    );
+  }
+
+  String? _getIconNotification() => imageFromGallery.path.isEmpty
+      ? imageFromCategory
+      : null; //base64Encode(imageFromGallery.readAsBytesSync())
+
   void updateStatus({required String status, required int id}) async {
     log('Update To Database', name: 'Update Status Function');
     await database!.rawUpdate(
-      'UPDATE $tabelTodo SET $columnStatus = ? WHERE id = ?',
+      'UPDATE $tabelTodo SET $columnStatus = ? WHERE $columnId = ?',
       [status, id],
-    ).then((value) {
+    ).then((_) {
       log('Update is Successfully', name: 'Update Status Function');
-      getFromDatabase(database);
-      emit(UpdateDatabaseState());
+      getFromDatabase(database).then((_) => emit(UpdateDatabaseState()));
     });
   }
 
-  void updateArchive({
+  void updateToArchive({
     required bool isArchive,
     required int id,
   }) async {
     log('Update To Database', name: 'Update Archive Function');
     await database!.rawUpdate(
-      'UPDATE $tabelTodo SET $columnIsArchive = ? WHERE id = ?',
+      'UPDATE $tabelTodo SET $columnIsArchive = ? WHERE $columnId = ?',
       [isArchive ? 1 : 0, id],
-    ).then((value) {
+    ).then((_) {
       log('Update is Successfully', name: 'Update Archive Function');
-      getFromDatabase(database);
-      emit(UpdateDatabaseState());
+      getFromDatabase(database).then((_) => emit(UpdateDatabaseState()));
     });
   }
 
   // ! Not Used After
   void updateImage({required String image, required int id}) async {
     await database!.rawUpdate(
-        'UPDATE $tabelTodo SET $columnImage = ? WHERE id = ?',
-        [image, id]).then((value) {
-      print(image);
-      print(value);
-      getFromDatabase(database);
-      emit(UpdateDatabaseState());
-    });
+      'UPDATE $tabelTodo SET $columnImage = ? WHERE $columnId = ?',
+      [image, id],
+    ).then(
+      (_) => getFromDatabase(database).then((_) => emit(UpdateDatabaseState())),
+    );
   }
 
-  void deleteTask({required int id}) async {
+  void deleteTask({required int id, String? title}) async {
     log('Delete From Database', name: 'Delete Function');
-    await database!
-        .rawDelete('DELETE FROM $tabelTodo WHERE id = ?', [id]).then((value) {
+    _localNotificationsService.cancelNotification(id, title: title);
+    await database!.rawDelete(
+      'DELETE FROM $tabelTodo WHERE $columnId = ?',
+      [id],
+    ).then((_) {
       log('Delete is Successfully', name: 'Delete Function');
-      getFromDatabase(database);
-      emit(DeleteDatabaseState());
+      getFromDatabase(database).then((_) => emit(DeleteDatabaseState()));
     });
   }
 
-  void getFromDatabase(Database? database) async {
-    emit(GetDatabaseLoadingState());
-    log('Get All Data From Database', name: 'Get Data Function');
-    await database!.rawQuery('SELECT * FROM $tabelTodo').then((value) {
-      //* This Query is return to all data from database .. meaning a to list new/done/archive
-      //* => if condition don't true
-      //? Therefore, the condition was met only when the database was created
-      log('Get Data is Successfully', name: 'Get Data Function');
-      if (value.isEmpty) {
-        emit(IsEmptyDatebaseState());
-        return;
-      }
-      newTasks.clear();
-      doneTasks.clear();
-      archiveTasks.clear();
-      log('Start Add Data to Task List', name: 'Get Data Function');
-      for (var element in value) {
-        final task = TaskModel.fromMap(element);
-        if (task.status == 'new' && !task.isArchive) {
-          newTasks.add(task);
-        } else if (task.status == 'done' && !task.isArchive) {
-          doneTasks.add(task);
-        } else {
-          archiveTasks.add(task);
-        }
-      }
-      log('Done Added Data to Task List', name: 'Get Data Function');
-      emit(GetDatabaseState());
+  void deleteAllTasksWhereStatus({
+    String? status,
+    bool isArchive = false,
+  }) async {
+    if (isArchive) return _deleteAllArchiveTasks();
+    _deleteAllNewOrDoneTasks(status);
+
+    _localNotificationsService.cancelAllNotificationsForce();
+    log('All notifications have been canceled');
+  }
+
+  void _deleteAllArchiveTasks() async {
+    await database!.rawDelete(
+      'DELETE FROM $tabelTodo WHERE $columnIsArchive = ?',
+      [1],
+    ).then((_) {
+      log('Delete All Tasks is Successfully', name: 'Delete Archive Function');
+      getFromDatabase(database).then((_) => emit(DeleteDatabaseState()));
     });
   }
+
+  void _deleteAllNewOrDoneTasks(String? status) async {
+    await database!.rawDelete(
+      'DELETE FROM $tabelTodo WHERE $columnStatus = ? and $columnIsArchive = ?',
+      [status, 0],
+    ).then((_) {
+      log(
+        'Delete All Tasks is Successfully',
+        name: 'Delete New or Done Function',
+      );
+      getFromDatabase(database).then((_) => emit(DeleteDatabaseState()));
+    });
+  }
+
+  Future<void> getFromDatabase(Database? database) async {
+    await database!.rawQuery('SELECT * FROM $tabelTodo').then((value) {
+      log('Get Data is Successfully', name: 'Get Data Function');
+      _clearTasks();
+      if (value.isEmpty) return emit(IsEmptyDatebaseState());
+      final tasks = value.map((e) => TaskModel.fromMap(e)).toList();
+      _fillTasks(tasks);
+      log('Done Added Data to Task List', name: 'Get Data Function');
+    }).catchError(
+      (error) => log(error.toString(), name: "Error when get from database"),
+    );
+  }
+
+  void _clearTasks() {
+    newTasks.clear();
+    doneTasks.clear();
+    archiveTasks.clear();
+  }
+
+  void _fillTasks(List<TaskModel> tasks) {
+    newTasks.addAll(tasks.where((task) => _isNew(task)).toList());
+    doneTasks.addAll(tasks.where((task) => _isDone(task)).toList());
+    archiveTasks.addAll(tasks.where((task) => task.isArchive).toList());
+    _getLastNewTask();
+  }
+
+  bool _isNew(TaskModel task) =>
+      task.status == Global.isNewTask && !task.isArchive;
+
+  bool _isDone(TaskModel task) =>
+      task.status == Global.isDoneTask && !task.isArchive;
+
+  //* Sort out to save the last task Schedule notifications
+  void _getLastNewTask() {
+    if (newTasks.isEmpty) return;
+    newTasks.sort((a, b) => a.id.compareTo(b.id));
+    _lastNewTask = newTasks.last;
+  }
+
+  bool _newTasksIsAsc = false;
+  bool _doneTasksIsAsc = false;
+  bool _archiveTasksIsAsc = false;
+
+  void sortNewTasks() {
+    _sortLists(newTasks, _newTasksIsAsc);
+    _newTasksIsAsc = !_newTasksIsAsc;
+  }
+
+  void sortDoneTasks() {
+    _sortLists(doneTasks, _doneTasksIsAsc);
+    _doneTasksIsAsc = !_doneTasksIsAsc;
+  }
+
+  void sortArchiveTasks() {
+    _sortLists(archiveTasks, _archiveTasksIsAsc);
+    _archiveTasksIsAsc = !_archiveTasksIsAsc;
+  }
+
+  void _sortLists(List<TaskModel> listTasks, bool isAscending) {
+    if (!isAscending) {
+      listTasks.sort((a, b) => b.id.compareTo(a.id));
+    } else {
+      listTasks.sort((a, b) => a.id.compareTo(b.id));
+    }
+    emit(SortingListState());
+  }
+
+  TaskModel getTaskById(int id) =>
+      newTasks.singleWhere((task) => task.id == id);
 }
