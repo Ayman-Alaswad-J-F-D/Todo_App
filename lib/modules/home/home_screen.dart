@@ -1,7 +1,6 @@
 import 'package:conditional_builder_null_safety/conditional_builder_null_safety.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:todo_app/shared/components/tasks_list_builder.dart';
 import 'package:todo_app/shared/constants/constants.dart';
 import 'package:todo_app/shared/cubit/cubit.dart';
@@ -20,11 +19,12 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.secandry,
       body: Stack(
         children: [
-          Column(
-            children: const [
+          const Column(
+            children: [
               Expanded(flex: 2, child: Header()),
               Expanded(flex: 3, child: SizedBox()),
             ],
@@ -40,6 +40,11 @@ class HomeScreen extends StatelessWidget {
                 CustomContainer(
                   height: heightScreen(context) * .32,
                   child: BlocBuilder<TodoAppCubit, TodoAppStates>(
+                    buildWhen: (_, current) =>
+                        current is CreateDatabaseState ||
+                        current is InsertDatabaseState ||
+                        current is UpdateDatabaseState ||
+                        current is DeleteDatabaseState,
                     builder: (context, state) {
                       final newTasks = TodoAppCubit.get(context).newTasks;
                       return ConditionalBuilder(
@@ -51,19 +56,22 @@ class HomeScreen extends StatelessWidget {
                     },
                   ),
                 ),
-                const LabelWidget(title: 'Completed', pB: 14, pT: 14),
+                const LabelWidget(title: 'Completed', pB: 12, pT: 12),
                 CustomContainer(
-                  height: heightScreen(context) * .23,
+                  height: heightScreen(context) * .26,
                   child: BlocBuilder<TodoAppCubit, TodoAppStates>(
+                    buildWhen: (_, current) =>
+                        current is CreateDatabaseState ||
+                        current is UpdateDatabaseState ||
+                        current is DeleteDatabaseState,
                     builder: (context, state) {
                       final doneTasks = TodoAppCubit.get(context).doneTasks;
                       return ConditionalBuilder(
                         condition: state is! IsEmptyDatebaseState &&
                             doneTasks.isNotEmpty,
-                        builder: (context) =>
+                        builder: (_) =>
                             TasksListBuilder(tasks: doneTasks, isDone: true),
-                        fallback: (context) =>
-                            const FallBackWidget(isDone: true),
+                        fallback: (_) => const FallBackWidget(isDone: true),
                       );
                     },
                   ),
@@ -76,7 +84,7 @@ class HomeScreen extends StatelessWidget {
               final list = TodoAppCubit.get(context);
               if (list.doneTasks.isNotEmpty || list.newTasks.isNotEmpty) {
                 return Positioned(
-                  bottom: heightScreen(context) * .11,
+                  bottom: heightScreen(context) * .09,
                   right: 0,
                   left: 0,
                   child: LabelWidget(
