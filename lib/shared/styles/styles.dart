@@ -1,3 +1,3 @@
-class AppFonts {
-  static const primaryFont = 'Lora';
-}
+// class AppFonts {
+  // static const primaryFont = 'Lora';
+// }
