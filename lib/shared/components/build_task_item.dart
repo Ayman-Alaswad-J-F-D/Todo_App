@@ -1,15 +1,15 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:todo_app/app/global/global.dart';
 import 'package:todo_app/model/task_model.dart';
-
 import 'package:todo_app/modules/details_screen/details_screen.dart';
 import 'package:todo_app/shared/constants/constants.dart';
 import 'package:todo_app/shared/extension/extension.dart';
-import 'package:todo_app/shared/styles/colors.dart';
 import 'package:todo_app/widgets/label_widget.dart';
 import 'package:todo_app/widgets/show_toast_short.dart';
 
+import '../../widgets/confirm_dialog.dart';
 import '../../widgets/task_widget.dart';
 import '../cubit/cubit.dart';
 import '../styles/colors.dart';
@@ -18,15 +18,11 @@ class BuildTaskItem extends StatelessWidget {
   const BuildTaskItem({
     Key? key,
     required this.data,
-    required this.index,
     this.isDone = false,
-    this.isArchive = false,
   }) : super(key: key);
 
   final TaskModel data;
-  final int index;
   final bool isDone;
-  final bool isArchive;
 
   @override
   Widget build(BuildContext context) {
@@ -34,14 +30,15 @@ class BuildTaskItem extends StatelessWidget {
 
     return GestureDetector(
       onTap: () => context.toScreen(
-        screen: DetailsScreen(model: data, index: index),
+        screen: DetailsScreen(taskId: data.id),
       ),
       child: Dismissible(
         // key: Key(index.toString()),
         key: UniqueKey(),
         background: backDelete(MainAxisAlignment.start),
-        secondaryBackground:
-            data.isArchive ? backDelete(MainAxisAlignment.end) : backArchive(),
+        secondaryBackground: data.isArchive
+            ? backDelete(MainAxisAlignment.end, isArchive: data.isArchive)
+            : backArchive(),
 
         onDismissed: (DismissDirection direction) =>
             onDismissedImpl(direction, cubit),
@@ -54,11 +51,11 @@ class BuildTaskItem extends StatelessWidget {
           taskTime: data.time,
           image: data.image,
           opacity: isDone ? .4 : 1,
-          checkBoxValue: data.status == 'done',
+          checkBoxValue: data.status == Global.isDoneTask,
           decoration: isDone ? TextDecoration.lineThrough : null,
           onChange: (isCheck) {
             if (isCheck!) {
-              cubit.updateStatus(id: data.id, status: 'done');
+              cubit.updateStatus(id: data.id, status: Global.isDoneTask);
               showToastShort(
                 text: 'Done',
                 state: ToastStates.Done,
@@ -84,9 +81,9 @@ class BuildTaskItem extends StatelessWidget {
 
   void onDismissedImpl(DismissDirection direction, TodoAppCubit cubit) {
     if (direction == DismissDirection.endToStart && !data.isArchive) {
-      cubit.updateArchive(isArchive: true, id: data.id);
+      cubit.updateToArchive(isArchive: true, id: data.id);
     } else {
-      cubit.deleteTask(id: data.id);
+      cubit.deleteTask(id: data.id, title: data.title);
     }
   }
 }
@@ -107,43 +104,6 @@ Future confirmDialogArchive(context) => confirmDialog(
       labelButton: 'ADD',
       color: AppColors.primary.shade400,
     );
-
-Future confirmDialog({
-  required BuildContext context,
-  required String titleDialog,
-  required String questionDialog,
-  required String labelButton,
-  required Color color,
-}) {
-  return showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: LabelWidget(title: titleDialog, color: color),
-      content: SizedBox(
-        width: widthScreen(context) / 1.2,
-        child: LabelWidget(
-          title: questionDialog,
-          color: AppColors.greyS600,
-          fontWeight: FontWeight.normal,
-          fontSize: 15,
-        ),
-      ),
-      actions: [
-        FlatButton(
-          child: const LabelWidget(
-            title: 'Cancel',
-            fontWeight: FontWeight.normal,
-          ),
-          onPressed: () => Navigator.of(context).pop(false),
-        ),
-        FlatButton(
-          child: LabelWidget(title: labelButton, color: color),
-          onPressed: () => Navigator.of(context).pop(true),
-        ),
-      ],
-    ),
-  );
-}
 
 //* Style Background Dismissible Widget
 Widget backDismissible({
@@ -175,11 +135,16 @@ Widget backDismissible({
   );
 }
 
-Widget backDelete(MainAxisAlignment mainAxisAlignment) => backDismissible(
+Widget backDelete(
+  MainAxisAlignment mainAxisAlignment, {
+  bool isArchive = false,
+}) =>
+    backDismissible(
       label: 'Move To Trash',
       mainAxisAlignment: mainAxisAlignment,
       icon: Icons.delete,
       color: AppColors.red,
+      reverse: isArchive,
     );
 
 Widget backArchive() => backDismissible(
