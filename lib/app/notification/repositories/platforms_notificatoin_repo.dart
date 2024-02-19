@@ -12,6 +12,8 @@ abstract class PlatformsNotification {
 }
 
 class PlatformsNotificationImpl implements PlatformsNotification {
+  static const defaultNotificationIcon = "splash";
+
   @override
   NotificationDetails notificationDetails({
     String? iconNotification,
@@ -71,12 +73,12 @@ class PlatformsNotificationImpl implements PlatformsNotification {
   }
 
   static String? _getIconNotification(String? iconNotification) {
-    if (iconNotification != null) {
-      iconNotification = basename(iconNotification.split(".")[0]);
-      return "@drawable/$iconNotification";
-    }
-    return "default_icon";
+    if (iconNotification == null) return defaultNotificationIcon;
+    return iconNotification = _extractIconName(iconNotification);
   }
+
+  static String _extractIconName(String iconPath) =>
+      basename(iconPath.split(".")[0]);
 
   //* When you add a new image in a [drawable] project file .. Please run the app again.
   // just add image name.. without extension '.png, ..etc'.
