@@ -1,12 +1,11 @@
-// ignore_for_file: deprecated_member_use
-
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:todo_app/app/global/global.dart';
 import 'package:todo_app/model/task_model.dart';
 import 'package:todo_app/modules/details_screen/details_screen.dart';
 import 'package:todo_app/shared/constants/constants.dart';
 import 'package:todo_app/shared/extension/extension.dart';
-import 'package:todo_app/widgets/label_widget.dart';
 import 'package:todo_app/widgets/show_toast_short.dart';
 
 import '../../widgets/confirm_dialog.dart';
@@ -28,68 +27,147 @@ class BuildTaskItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = TodoAppCubit.get(context);
 
-    return GestureDetector(
-      onTap: () => context.toScreen(
-        screen: DetailsScreen(taskId: data.id),
-      ),
-      child: Dismissible(
-        // key: Key(index.toString()),
-        key: UniqueKey(),
-        background: backDelete(MainAxisAlignment.start),
-        secondaryBackground: data.isArchive
-            ? backDelete(MainAxisAlignment.end, isArchive: data.isArchive)
-            : backArchive(),
-
-        onDismissed: (DismissDirection direction) =>
-            onDismissedImpl(direction, cubit),
-
-        confirmDismiss: (DismissDirection direction) async =>
-            await confirmDismissImpl(direction, context),
-
-        child: TaskWidget(
-          taskTitle: data.title,
-          taskTime: data.time,
-          image: data.image,
-          isDoneTask: isDone,
-          checkBoxValue: data.status == Global.isDoneTask,
-          decoration: isDone ? TextDecoration.lineThrough : null,
-          onChange: (isCheck) {
-            if (isCheck!) {
-              cubit.updateStatus(id: data.id, status: Global.isDoneTask);
-              showToastShort(
-                text: 'Done',
-                state: ToastStates.Done,
-                context: context,
-                padLeft: widthScreen(context) / 2.5,
-                padRight: widthScreen(context) / 2.5,
-              );
-            }
-          },
+    return SlidableAutoCloseBehavior(
+      child: GestureDetector(
+        onTap: () => context.toScreen(
+          screen: DetailsScreen(taskId: data.id),
+        ),
+        child: Slidable(
+          key: Key(data.id.toString()),
+          startActionPane: ActionPane(
+            motion: const DrawerMotion(),
+            extentRatio: isDone ? 0.5 : 0.3,
+            children: [
+              if (data.isArchive)
+                DeleteAction(taskId: data.id)
+              else
+                ArchiveAction(taskId: data.id),
+              if (isDone) UndoAction(taskId: data.id),
+            ],
+          ),
+          endActionPane: ActionPane(
+            extentRatio: 0.3,
+            motion: const BehindMotion(),
+            children: [DeleteAction(taskId: data.id)],
+          ),
+          child: TaskWidget(
+            taskTitle: data.title,
+            taskTime: data.time,
+            image: data.image,
+            isDoneTask: isDone,
+            checkBoxValue: data.status == Global.isDoneTask,
+            onChange: (isCheck) {
+              if (isCheck!) {
+                cubit.updateStatus(id: data.id, status: Global.isDoneTask);
+                showToastShort(
+                  text: 'Done',
+                  state: ToastStates.Done,
+                  context: context,
+                  padLeft: widthScreen(context) / 2.5,
+                  padRight: widthScreen(context) / 2.5,
+                );
+              }
+            },
+          ),
         ),
       ),
     );
   }
+}
 
-//* Confirm & Dismissed Method
-  Future<bool?> confirmDismissImpl(DismissDirection direction, context) async {
-    if (direction == DismissDirection.endToStart && !data.isArchive) {
-      return await confirmDialogArchive(context);
-    } else {
-      return await confirmDialogDelete(context);
-    }
+class UndoAction extends StatelessWidget {
+  const UndoAction({
+    Key? key,
+    required this.taskId,
+  }) : super(key: key);
+
+  final int taskId;
+  @override
+  Widget build(BuildContext context) {
+    return SlidableAction(
+      label: 'Undo',
+      padding: EdgeInsets.zero,
+      icon: CupertinoIcons.arrow_uturn_right_circle_fill,
+      backgroundColor: AppColors.primary.shade400,
+      onPressed: (ctx) => _dismissible(ctx, Actions.undo, taskId),
+    );
   }
+}
 
-  void onDismissedImpl(DismissDirection direction, TodoAppCubit cubit) {
-    if (direction == DismissDirection.endToStart && !data.isArchive) {
-      cubit.updateToArchive(isArchive: true, id: data.id);
-    } else {
-      cubit.deleteTask(id: data.id, title: data.title);
-    }
+class DeleteAction extends StatelessWidget {
+  const DeleteAction({
+    Key? key,
+    required this.taskId,
+  }) : super(key: key);
+
+  final int taskId;
+  @override
+  Widget build(BuildContext context) {
+    return SlidableAction(
+      label: 'Delete',
+      padding: EdgeInsets.zero,
+      icon: CupertinoIcons.delete_solid,
+      backgroundColor: AppColors.red,
+      onPressed: (ctx) => _dismissible(ctx, Actions.delete, taskId),
+    );
+  }
+}
+
+class ArchiveAction extends StatelessWidget {
+  const ArchiveAction({
+    Key? key,
+    required this.taskId,
+  }) : super(key: key);
+
+  final int taskId;
+  @override
+  Widget build(BuildContext context) {
+    return SlidableAction(
+      label: 'Archive',
+      padding: EdgeInsets.zero,
+      icon: Icons.archive_rounded,
+      foregroundColor: AppColors.grey,
+      backgroundColor: AppColors.greyS200,
+      onPressed: (ctx) => _dismissible(ctx, Actions.archive, taskId),
+    );
+  }
+}
+
+enum Actions { undo, delete, archive }
+
+Future<void> _dismissible(
+  BuildContext context,
+  Actions action,
+  int taskId,
+) async {
+  final cubit = TodoAppCubit.get(context);
+  switch (action) {
+    case Actions.undo:
+      cubit.updateStatus(status: Global.isNewTask, id: taskId);
+      return showToastShort(
+        text: 'Undo Task',
+        context: context,
+        state: ToastStates.WARNING,
+      );
+    case Actions.delete:
+      return _confirmDialogDelete(context).then(
+        (isConfirm) {
+          if (!isConfirm) return;
+          cubit.deleteTask(id: taskId);
+        },
+      );
+    case Actions.archive:
+      return _confirmDialogArchive(context).then(
+        (isConfirm) {
+          if (!isConfirm) return;
+          cubit.updateToArchive(isArchive: true, id: taskId);
+        },
+      );
   }
 }
 
 //* Style Confirm Dialog Method
-Future confirmDialogDelete(context) => confirmDialog(
+Future _confirmDialogDelete(context) => confirmDialog(
       context: context,
       titleDialog: 'Delete Confirmation',
       questionDialog: 'Are you sure you want to delete this task ?',
@@ -97,60 +175,10 @@ Future confirmDialogDelete(context) => confirmDialog(
       color: AppColors.red,
     );
 
-Future confirmDialogArchive(context) => confirmDialog(
+Future _confirmDialogArchive(context) => confirmDialog(
       context: context,
       titleDialog: 'Archive Confirmation',
       questionDialog: 'Are you want to Add this task to archive ?',
       labelButton: 'ADD',
-      color: AppColors.primary.shade400,
-    );
-
-//* Style Background Dismissible Widget
-Widget backDismissible({
-  required MainAxisAlignment mainAxisAlignment,
-  required Color color,
-  required IconData icon,
-  required String label,
-  bool reverse = false,
-}) {
-  return Container(
-    color: color,
-    padding: const EdgeInsets.all(10),
-    child: Row(
-      mainAxisAlignment: mainAxisAlignment,
-      children: [
-        if (!reverse) Icon(icon, color: AppColors.white),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5),
-          child: LabelWidget(
-            title: label,
-            color: AppColors.white,
-            fontWeight: FontWeight.normal,
-            fontSize: 15,
-          ),
-        ),
-        if (reverse) Icon(icon, color: AppColors.white),
-      ],
-    ),
-  );
-}
-
-Widget backDelete(
-  MainAxisAlignment mainAxisAlignment, {
-  bool isArchive = false,
-}) =>
-    backDismissible(
-      label: 'Move To Trash',
-      mainAxisAlignment: mainAxisAlignment,
-      icon: Icons.delete,
-      color: AppColors.red,
-      reverse: isArchive,
-    );
-
-Widget backArchive() => backDismissible(
-      label: 'Move To Archive',
-      mainAxisAlignment: MainAxisAlignment.end,
-      icon: Icons.archive_rounded,
-      color: AppColors.greyS400,
-      reverse: true,
+      color: AppColors.greyS600,
     );
