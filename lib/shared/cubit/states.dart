@@ -6,6 +6,8 @@ class AppInitialState extends TodoAppStates {}
 
 class CreateDatabaseState extends TodoAppStates {}
 
+class GetDatabaseState extends TodoAppStates {}
+
 class IsEmptyDatebaseState extends TodoAppStates {}
 
 class InsertDatabaseState extends TodoAppStates {}
