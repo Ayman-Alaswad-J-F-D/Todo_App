@@ -2,9 +2,11 @@ flutter_native_splash:
   fullscreen: true
   android: true
   ios: true
-  web: true
+  web: false
   color: "#ffffff"
-  image: "assets/splash_icon.png"
+  image: "assets/app_icon/icon.png"
+  branding: "assets/branding.png"
   android_12:
-    image: "assets/splash_icon.png"
-    icon_background_color: "#ffffff"
+    color: "#ffffff"
+    image: "assets/app_icon/icon.png"
+    branding: "assets/branding.png"
