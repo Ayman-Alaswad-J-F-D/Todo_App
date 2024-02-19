@@ -50,7 +50,7 @@ class BuildTaskItem extends StatelessWidget {
           taskTitle: data.title,
           taskTime: data.time,
           image: data.image,
-          opacity: isDone ? .4 : 1,
+          isDoneTask: isDone,
           checkBoxValue: data.status == Global.isDoneTask,
           decoration: isDone ? TextDecoration.lineThrough : null,
           onChange: (isCheck) {
