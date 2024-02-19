@@ -79,6 +79,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                           padding: const EdgeInsets.only(top: 6),
                           child: SizedBox(
                             child: checkImage(
+                              context,
                               image: task.image,
                               width: widthScreen(context) / 3.8,
                             ),
