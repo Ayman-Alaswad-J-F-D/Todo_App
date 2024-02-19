@@ -24,8 +24,6 @@ class TaskWidget extends StatelessWidget {
   final Function(bool?) onChange;
   final bool checkBoxValue;
 
-  //* Removed decoration argument and added value for that by compare 'isDoneTask' argument value
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
