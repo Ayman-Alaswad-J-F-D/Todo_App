@@ -41,7 +41,7 @@ class HomeScreen extends StatelessWidget {
                   height: heightScreen(context) * .32,
                   child: BlocBuilder<TodoAppCubit, TodoAppStates>(
                     buildWhen: (_, current) =>
-                        current is CreateDatabaseState ||
+                        current is GetDatabaseState ||
                         current is InsertDatabaseState ||
                         current is UpdateDatabaseState ||
                         current is DeleteDatabaseState,
@@ -61,7 +61,7 @@ class HomeScreen extends StatelessWidget {
                   height: heightScreen(context) * .26,
                   child: BlocBuilder<TodoAppCubit, TodoAppStates>(
                     buildWhen: (_, current) =>
-                        current is CreateDatabaseState ||
+                        current is GetDatabaseState ||
                         current is UpdateDatabaseState ||
                         current is DeleteDatabaseState,
                     builder: (context, state) {
@@ -88,7 +88,7 @@ class HomeScreen extends StatelessWidget {
                   right: 0,
                   left: 0,
                   child: LabelWidget(
-                    title: 'Swap To Rigth To Delete or Swap To Left To Archive',
+                    title: 'Swap To Rigth To Archive or Swap To Left To Delete',
                     spacing: .5,
                     fontSize: 10,
                     color: AppColors.primary.shade400,

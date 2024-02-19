@@ -24,7 +24,7 @@ class DoneTasksScreen extends StatelessWidget {
           cubit.deleteAllTasksWhereStatus(status: Global.isDoneTask),
       listViewItem: BlocBuilder<TodoAppCubit, TodoAppStates>(
         buildWhen: (previous, current) =>
-            current is CreateDatabaseState ||
+            current is GetDatabaseState ||
             current is UpdateDatabaseState ||
             current is DeleteDatabaseState ||
             current is SortingListState,
