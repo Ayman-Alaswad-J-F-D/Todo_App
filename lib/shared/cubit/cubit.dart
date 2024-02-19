@@ -69,7 +69,7 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
   final List<TaskModel> newTasks = [];
   final List<TaskModel> doneTasks = [];
   final List<TaskModel> archiveTasks = [];
-  TaskModel? _lastNewTask;
+  String? _lastNewTaskTitle;
 
   void createDatabase() {
     // open the database
@@ -91,13 +91,10 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
           .then((value) => log('Tabel Created', name: 'Create Function'))
           .catchError((error) =>
               log('Database Error', error: error, name: 'Create Function'));
-    }, onOpen: (database) {
+    }, onOpen: (db) {
+      database = db;
       log('Database Opened', name: 'Create Function');
-      getFromDatabase(database);
-    }).then((value) {
-      database = value;
-      emit(CreateDatabaseState());
-    });
+    }).then((_) => getFromDatabase(database));
   }
 
   Future<void> insertDatabase({
@@ -148,7 +145,7 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
       time: time,
       date: date,
       iconNotification: _getIconNotification(),
-      payload: _lastNewTask!.title,
+      payload: _lastNewTaskTitle,
     );
   }
 
@@ -245,6 +242,7 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
       final tasks = value.map((e) => TaskModel.fromMap(e)).toList();
       _fillTasks(tasks);
       log('Done Added Data to Task List', name: 'Get Data Function');
+      emit(GetDatabaseState());
     }).catchError(
       (error) => log(error.toString(), name: "Error when get from database"),
     );
@@ -273,7 +271,7 @@ class TodoAppCubit extends Cubit<TodoAppStates> {
   void _getLastNewTask() {
     if (newTasks.isEmpty) return;
     newTasks.sort((a, b) => a.id.compareTo(b.id));
-    _lastNewTask = newTasks.last;
+    _lastNewTaskTitle = newTasks.last.title;
   }
 
   bool _newTasksIsAsc = false;
