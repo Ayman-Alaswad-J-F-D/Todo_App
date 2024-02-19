@@ -15,16 +15,16 @@ class TaskWidget extends StatelessWidget {
     required this.checkBoxValue,
     required this.onChange,
     this.isDoneTask = false,
-    this.decoration,
   }) : super(key: key);
 
   final String taskTitle;
   final String taskTime;
   final String image;
   final bool isDoneTask;
-  final TextDecoration? decoration;
   final Function(bool?) onChange;
   final bool checkBoxValue;
+
+  //* Removed decoration argument and added value for that by compare 'isDoneTask' argument value
 
   @override
   Widget build(BuildContext context) {
@@ -40,12 +40,12 @@ class TaskWidget extends StatelessWidget {
           title: LabelWidget(
             title: taskTitle,
             fontWeight: FontWeight.bold,
-            decoration: decoration,
+            decoration: isDoneTask ? TextDecoration.lineThrough : null,
             pB: 5,
           ),
           subtitle: TimeTask(
             time: taskTime,
-            decoration: decoration,
+            decoration: isDoneTask ? TextDecoration.lineThrough : null,
           ),
           trailing: CustomCheckBox(
             value: checkBoxValue,
