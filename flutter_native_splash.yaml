@@ -8,5 +8,5 @@ flutter_native_splash:
   branding: "assets/branding.png"
   android_12:
     color: "#ffffff"
-    image: "assets/app_icon/icon.png"
+    image: "assets/app_icon/icon_android_12.png"
     branding: "assets/branding.png"
